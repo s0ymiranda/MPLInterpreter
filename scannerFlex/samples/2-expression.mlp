@@ -27,3 +27,5 @@ sum3 = -3/125 * letter + 0.6;
 tFinal = 30;
 
 ode = params(sum3,(to,xo), tFinal,letter);
+
+sum_test = pow + var1 + LN(var1);
