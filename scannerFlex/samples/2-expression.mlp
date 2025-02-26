@@ -3,7 +3,7 @@ var = 'A';
 sum = num1 + var;
 sub = num1 - sum;
 mul = sub * var;
-div = mul + 10;
+div = mul / 10;
 func = div;
 
 display(func);

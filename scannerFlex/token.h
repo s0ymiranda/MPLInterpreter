@@ -15,7 +15,16 @@ typedef enum
     TOKEN_ASSIGN = 268,
     TOKEN_NUMBER = 269,
     TOKEN_VAR = 270,
-    TOKEN_IDENTIFIER = 276,
+
+    TOKEN_ADD = 271,
+    TOKEN_SUBSTRACT = 272,
+    TOKEN_MULTIPLY = 273,
+    TOKEN_DIVIDE = 274,
+    TOKEN_POW = 275,
+    TOKEN_LOG = 276,
+    TOKEN_PARAMS = 277,
+
+    TOKEN_IDENTIFIER = 310,
 
 }token_t;
 
@@ -36,6 +45,13 @@ inline const char* to_str(token_t t)
         case TOKEN_ASSIGN: return "ASSIGN";
         case TOKEN_NUMBER: return "NUMBER";
         case TOKEN_VAR: return "VARIABLE";
+        case TOKEN_ADD: return "ADD";
+        case TOKEN_SUBSTRACT: return "SUBSTRACT";
+        case TOKEN_MULTIPLY: return "MULTIPLY";
+        case TOKEN_DIVIDE: return "DIVIDE";
+        case TOKEN_POW: return "POW";
+        case TOKEN_LOG: return "LOG";
+        case TOKEN_PARAMS: return "PARAMS";
         case TOKEN_IDENTIFIER: return "IDENTIFIER";
     }
 }

@@ -24,6 +24,14 @@ VARIABLE   '{LETTER}'
 "="             { return TOKEN_ASSIGN; }
 {NUMBER}        { return TOKEN_NUMBER; }
 {VARIABLE}      { return TOKEN_VAR; }
+
+"+"             { return TOKEN_ADD; }
+"-"             { return TOKEN_SUBSTRACT; }
+"*"             { return TOKEN_MULTIPLY; }
+"/"             { return TOKEN_DIVIDE; }
+"^"             { return TOKEN_POW; }
+"LOG"           { return TOKEN_LOG; }
+"params"        { return TOKEN_PARAMS; }
 {IDENTIFIER}    { return TOKEN_IDENTIFIER; }
 %%
 
