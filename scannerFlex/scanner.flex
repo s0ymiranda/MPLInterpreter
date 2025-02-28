@@ -99,15 +99,15 @@ VARIABLE   '{LETTER}'
 
 "LOG"               {
                         num_column += yyleng;
-                        return TOKEN_LOG;
+                        return TOKEN_LOGARITHM;
                     }
 "LN"                {
                         num_column += yyleng;
-                        return TOKEN_LN;
+                        return TOKEN_NATURAL_LOGARITHM;
                     }
 "SQRT"              {
                         num_column += yyleng;
-                        return TOKEN_SQRT;
+                        return TOKEN_SQUARE_ROOT;
                     }
 "ROOT"              {
                         num_column += yyleng;
@@ -115,19 +115,19 @@ VARIABLE   '{LETTER}'
                     }
 "SIN"               {
                         num_column += yyleng;
-                        return TOKEN_SIN;
+                        return TOKEN_SINE;
                     }
 "COS"               {
                         num_column += yyleng;
-                        return TOKEN_COS;
+                        return TOKEN_COSINE;
                     }
 "TAN"               {
                         num_column += yyleng;
-                        return TOKEN_TAN;
+                        return TOKEN_TANGENT;
                     }
 "CTG"               {
                         num_column += yyleng;
-                        return TOKEN_CTG;
+                        return TOKEN_COTANGENT;
                     }
 "INVERSE"           {
                         num_column += yyleng;
@@ -135,7 +135,7 @@ VARIABLE   '{LETTER}'
                     }
 "MATRIXLU"          {
                         num_column += yyleng;
-                        return TOKEN_MATRIXLU;
+                        return TOKEN_MATRIX_LU;
                     }
 "TRIDIAGONAL"       {
                         num_column += yyleng;
@@ -143,7 +143,7 @@ VARIABLE   '{LETTER}'
                     }
 "REALEIGENVALUES"   {
                         num_column += yyleng;
-                        return TOKEN_REALEIGENVALUES;
+                        return TOKEN_REAL_EIGENVALUES;
                     }
 "DETERMINANT"       {
                         num_column += yyleng;
@@ -151,7 +151,7 @@ VARIABLE   '{LETTER}'
                     }
 "BISECTIONROOT"     {
                         num_column += yyleng;
-                        return TOKEN_BISECTIONROOT;
+                        return TOKEN_BISECTION_ROOT;
                     }
 "PI"                {
                         num_column += yyleng;

@@ -1,0 +1,5 @@
+*.o
+scanner.c
+scanner
+
+.vscode/
