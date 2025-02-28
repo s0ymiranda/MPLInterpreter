@@ -94,7 +94,7 @@ VARIABLE   '{LETTER}'
                     }
 "^"                 {
                         num_column += yyleng;
-                        return TOKEN_POW;
+                        return TOKEN_POWER;
                     }
 
 "LOG"               {

@@ -20,7 +20,7 @@ typedef enum
     TOKEN_SUBSTRACT = 272,
     TOKEN_MULTIPLY = 273,
     TOKEN_DIVIDE = 274,
-    TOKEN_POW = 275,
+    TOKEN_POWER = 275,
     TOKEN_LOG = 276,
     TOKEN_LN = 277,
     TOKEN_SQRT = 278,
@@ -63,7 +63,7 @@ inline const char* to_str(token_t t)
         case TOKEN_SUBSTRACT: return "SUBSTRACT";
         case TOKEN_MULTIPLY: return "MULTIPLY";
         case TOKEN_DIVIDE: return "DIVIDE";
-        case TOKEN_POW: return "POW";
+        case TOKEN_POWER: return "POWER";
         case TOKEN_LOG: return "LOG";
         case TOKEN_LN: return "LN";
         case TOKEN_SQRT: return "SQRT";
