@@ -21,11 +21,15 @@ For more information about the development and specifications of the Mathematica
    - Have a C compiler (such as GCC) available.
 
 2. **Clone the Repository:**
+
 3. **Acces the scannerFlex folder**
+
 4.  **Compile the Proyect**
-    - There is a makefile
+    - There is a makefile implemented
+
 5. **Run the scanner**
-    ./scanner <souce_code_file>
+   
+    ./scanner <souce_code_file> 
     in the samples folder, will be found 24 archives as examples
 
 
