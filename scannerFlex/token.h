@@ -38,7 +38,7 @@ typedef enum
     TOKEN_PI = 290,
     TOKEN_EULER = 291,
     TOKEN_PARAMS = 292,
-    TOKEN_IDENTIFIER = 310
+    TOKEN_IDENTIFIER = 293
 
 } token_t;
 
