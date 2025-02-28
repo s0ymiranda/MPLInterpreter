@@ -1,6 +1,6 @@
 %{
 #include "token.h"
-int num_column = 0;
+int num_column = 1;
 %}
 
 %option yylineno
@@ -16,7 +16,7 @@ VARIABLE   '{LETTER}'
 {SPACE}             {
                         if (yytext[0] == '\n')
                         {
-                            num_column = 0;
+                            num_column = 1;
                         }
                         else
                         {
