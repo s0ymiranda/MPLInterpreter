@@ -10,7 +10,7 @@ For more information about the development and specifications of the Mathematica
 
 ## Features of the Interpreter
 
-- **Lexical Analyzer:** Currently, the interpreter includes a lexical analyzer implemented using Flex and C. This component is essential for breaking down the source code into tokens that can be processed by the interpreter.
+- **Lexical Analyzer:** Currently, the interpreter includes a lexical analyzer implemented using Flex and C. This component is essential for breaking down the source code into tokens.
 
 - **Simplicity and Efficiency:** The purpose of the interpreter is to facilitate the execution of instructions in the Mathematical Programming Language, making it accessible even for those with basic programming knowledge.
 
