@@ -14,7 +14,7 @@ For more information about the development and specifications of the Mathematica
 
 - **Simplicity and Efficiency:** The purpose of the interpreter is to facilitate the execution of instructions in the Mathematical Programming Language, making it accessible even for those with basic programming knowledge.
 
-## Installation Instructions
+## Installation and Usage Instructions
 
 1. **Prerequisites:**
    - Ensure you have Flex installed on your system.
