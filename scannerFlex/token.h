@@ -1,4 +1,5 @@
 #pragma once
+
 typedef enum
 {
     TOKEN_EOF = 0,
@@ -15,7 +16,6 @@ typedef enum
     TOKEN_ASSIGN = 268,
     TOKEN_NUMBER = 269,
     TOKEN_VAR = 270,
-
     TOKEN_ADD = 271,
     TOKEN_SUBSTRACT = 272,
     TOKEN_MULTIPLY = 273,
@@ -37,13 +37,10 @@ typedef enum
     TOKEN_BISECTIONROOT = 289,
     TOKEN_PI = 290,
     TOKEN_EULER = 291,
-
     TOKEN_PARAMS = 292,
+    TOKEN_IDENTIFIER = 310
 
-    TOKEN_IDENTIFIER = 310,
-    TOKEN_UNKNOWN = 311
-
-}token_t;
+} token_t;
 
 inline const char* to_str(token_t t)
 {
@@ -85,6 +82,5 @@ inline const char* to_str(token_t t)
         case TOKEN_EULER: return "EULER";
         case TOKEN_PARAMS: return "PARAMS";
         case TOKEN_IDENTIFIER: return "IDENTIFIER";
-        case TOKEN_UNKNOWN: return "UNKNOWN";
     }
 }
