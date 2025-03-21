@@ -37,8 +37,10 @@ typedef enum
     TOKEN_BISECTION_ROOT = 289,
     TOKEN_PI = 290,
     TOKEN_EULER = 291,
-    TOKEN_PARAMS = 292,
-    TOKEN_IDENTIFIER = 293
+    TOKEN_INTEGRAL = 292,
+    TOKEN_INTERPOLATE = 293,
+    TOKEN_ODEFIRST = 294,
+    TOKEN_IDENTIFIER = 295
 
 } token_t;
 
@@ -80,7 +82,9 @@ inline const char* to_str(token_t t)
         case TOKEN_BISECTION_ROOT: return "BISECTION_ROOT";
         case TOKEN_PI: return "PI";
         case TOKEN_EULER: return "EULER";
-        case TOKEN_PARAMS: return "PARAMS";
+        case TOKEN_INTEGRAL: return "INTEGRAL";
+        case TOKEN_INTERPOLATE: return "INTERPOLATE";
+        case TOKEN_ODEFIRST: return "ODEFIRST";
         case TOKEN_IDENTIFIER: return "IDENTIFIER";
     }
 }
