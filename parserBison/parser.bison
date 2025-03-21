@@ -48,7 +48,7 @@ int yyerror(const char*);
 
 program : statement_list;
 
-statement_list : statement_list statement
+statement_list : statement statement_list
                | statement
                ;
 
