@@ -4,7 +4,7 @@ BISON = bison -Wcounterexamples --defines=token.h
 
 TEST_DIR = ../samples
 START = 1
-END = 24
+END = 29
 
 all: validator
 
@@ -35,10 +35,10 @@ run: validator
 		TEST_FILE="$(TEST_DIR)/$$i-"*.mpl; \
 		if [ -f $$(echo $$TEST_FILE | cut -d' ' -f1) ]; then \
 			for FILE in $$TEST_FILE; do \
-				echo "\nEjecutando prueba: $$FILE"; \
+				echo "\nTesting Samples: $$FILE"; \
 				./validator "$$FILE"; \
 			done; \
 		else \
-			echo "No se encontraron archivos para el índice $$i"; \
+			echo "Archives not found $$i"; \
 		fi; \
 	done

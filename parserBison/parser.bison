@@ -133,14 +133,18 @@ bisection_root_third_param : TOKEN_VAR
                            | TOKEN_IDENTIFIER
                            ;
 
+matrix_func_param : TOKEN_IDENTIFIER
+                  | TOKEN_LBRACE vector_list TOKEN_RBRACE
+                  ;
+
 function_call : logarithmic_function_call
               | root_function_call
               | trigonometric_function_call
-              | TOKEN_INVERSE TOKEN_LPAREN expression TOKEN_RPAREN
-              | TOKEN_MATRIXLU TOKEN_LPAREN expression TOKEN_RPAREN
-              | TOKEN_TRIDIAGONAL TOKEN_LPAREN expression TOKEN_RPAREN
-              | TOKEN_REALEIGENVALUES TOKEN_LPAREN expression TOKEN_RPAREN
-              | TOKEN_DETERMINANT TOKEN_LPAREN expression TOKEN_RPAREN
+              | TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+              | TOKEN_MATRIXLU TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+              | TOKEN_TRIDIAGONAL TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+              | TOKEN_REALEIGENVALUES TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+              | TOKEN_DETERMINANT TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
               | TOKEN_BISECTIONROOT TOKEN_LPAREN bisection_root_first_param TOKEN_COMMA expression TOKEN_COMMA bisection_root_third_param TOKEN_RPAREN
               | TOKEN_PARAMS TOKEN_LPAREN expression_list TOKEN_RPAREN
               ;
