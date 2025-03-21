@@ -20,12 +20,12 @@ interval = (to,tf);
 letter = 'x';
 sum2 = letter + 2;
 
-integral = params(interval, sum2, letter);
+integral = INTEGRAL(interval, sum2, letter);
 
 xo = 0;
 sum3 = -3/125 * letter + 0.6;
 tFinal = 30;
 
-ode = params(sum3,(to,xo), tFinal,letter);
+ode = ODEFIRST(sum3,(to,xo), tFinal,letter);
 
 sum_test = pow + var1 + LN(var1);

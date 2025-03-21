@@ -6,6 +6,6 @@ vector = [  (0,1.792),
             (90,0.317),
             (100,0.284)];
 
-interpolate = params(vector,15.0);
+interpolate = INTERPOLATE(vector,15.0);
 
 display(interpolate);

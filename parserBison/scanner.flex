@@ -162,10 +162,21 @@ VARIABLE   '{LETTER}'
                         return TOKEN_EULER;
                     }
 
-"params"            {
+"INTEGRAL"          {
                         num_column += yyleng;
-                        return TOKEN_PARAMS;
+                        return TOKEN_INTEGRAL;
                     }
+
+"ODEFIRST"          {
+                        num_column += yyleng;
+                        return TOKEN_ODEFIRST;
+                    }
+
+"INTERPOLATE"       {
+                        num_column += yyleng;
+                        return TOKEN_INTERPOLATE;
+                    }
+
 {IDENTIFIER}        {
                         num_column += yyleng;
                         return TOKEN_IDENTIFIER;

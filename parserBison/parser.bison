@@ -40,7 +40,9 @@ int yyerror(const char*);
 %token TOKEN_BISECTIONROOT
 %token TOKEN_PI
 %token TOKEN_EULER
-%token TOKEN_PARAMS
+%token TOKEN_INTEGRAL
+%token TOKEN_ODEFIRST
+%token TOKEN_INTERPOLATE
 
 %%
 
@@ -52,6 +54,7 @@ statement_list : statement_list statement
 
 statement : print_statement
           | display_statement
+          | assignment_statement
           | expression
           | expression TOKEN_SEMICOLON
           ;
@@ -60,8 +63,8 @@ print_statement : TOKEN_PRINT TOKEN_LPAREN expression TOKEN_RPAREN TOKEN_SEMICOL
 
 display_statement : TOKEN_DISPLAY TOKEN_LPAREN expression TOKEN_RPAREN TOKEN_SEMICOLON;
 
-assignment_expression : TOKEN_IDENTIFIER TOKEN_ASSIGN expression TOKEN_SEMICOLON
-                      | TOKEN_VAR TOKEN_ASSIGN numeric_expression TOKEN_SEMICOLON;
+assignment_statement : TOKEN_IDENTIFIER TOKEN_ASSIGN expression TOKEN_SEMICOLON
+                     | TOKEN_VAR TOKEN_ASSIGN numeric_expression TOKEN_SEMICOLON;
 
 expression : expression TOKEN_ADD term
            | expression TOKEN_SUBSTRACT term
@@ -92,7 +95,6 @@ factor : TOKEN_NUMBER
        | vector_expression
        | matrix_expression
        | function_call
-       | assignment_expression
        ;
 
 pair_expression : TOKEN_LPAREN expression TOKEN_COMMA expression TOKEN_RPAREN;
@@ -125,28 +127,47 @@ root_function_call : TOKEN_SQRT TOKEN_LPAREN expression TOKEN_RPAREN
                    | TOKEN_ROOT TOKEN_LPAREN expression TOKEN_COMMA expression TOKEN_RPAREN
                    ;
 
-bisection_root_first_param : pair_expression
-                           | TOKEN_IDENTIFIER
-                           ;
-
-bisection_root_third_param : TOKEN_VAR
-                           | TOKEN_IDENTIFIER
-                           ;
-
 matrix_func_param : TOKEN_IDENTIFIER
                   | TOKEN_LBRACE vector_list TOKEN_RBRACE
                   ;
 
+pair_or_id_param : pair_expression
+                 | TOKEN_IDENTIFIER
+                 ;
+
+var_or_id_param : TOKEN_VAR
+                | TOKEN_IDENTIFIER
+                ;
+
+integral_or_bisectionroot : TOKEN_BISECTIONROOT
+                          | TOKEN_INTEGRAL
+                          ;
+
+vector_or_id_param : vector_expression
+                   | TOKEN_IDENTIFIER
+                   ;
+
+number_or_id_param : TOKEN_NUMBER
+                   | TOKEN_IDENTIFIER
+                   ;
+
+matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+                     | TOKEN_MATRIXLU TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+                     | TOKEN_TRIDIAGONAL TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+                     | TOKEN_REALEIGENVALUES TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+                     | TOKEN_DETERMINANT TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+                     ;
+
+operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_param TOKEN_COMMA expression TOKEN_COMMA var_or_id_param TOKEN_RPAREN
+                         | TOKEN_INTERPOLATE TOKEN_LPAREN vector_or_id_param TOKEN_COMMA number_or_id_param TOKEN_RPAREN
+                         | TOKEN_ODEFIRST TOKEN_LPAREN expression TOKEN_COMMA pair_or_id_param TOKEN_COMMA number_or_id_param TOKEN_COMMA var_or_id_param TOKEN_RPAREN
+                         ;
+
 function_call : logarithmic_function_call
               | root_function_call
               | trigonometric_function_call
-              | TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
-              | TOKEN_MATRIXLU TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
-              | TOKEN_TRIDIAGONAL TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
-              | TOKEN_REALEIGENVALUES TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
-              | TOKEN_DETERMINANT TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
-              | TOKEN_BISECTIONROOT TOKEN_LPAREN bisection_root_first_param TOKEN_COMMA expression TOKEN_COMMA bisection_root_third_param TOKEN_RPAREN
-              | TOKEN_PARAMS TOKEN_LPAREN expression_list TOKEN_RPAREN
+              | matrix_function_call
+              | operations_function_call
               ;
 
 %%

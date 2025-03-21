@@ -6,6 +6,6 @@ letter = 'x';
 
 integral = letter + 2;
 
-inte = params(interval,integral, letter);
+inte = INTEGRAL(interval,integral, letter);
 
 display(inte);

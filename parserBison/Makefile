@@ -4,7 +4,7 @@ BISON = bison -Wcounterexamples --defines=token.h
 
 TEST_DIR = ../samples
 START = 1
-END = 32
+END = 34
 
 all: validator
 

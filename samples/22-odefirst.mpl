@@ -15,10 +15,10 @@ sum = num3 - mul;
 
 tFinal = 30;
 
-ode = params(sum,(to,xo),tFinal,var);
+ode = ODEFIRST(sum,(to,xo),tFinal,var);
 
 display(ode);
 
-ode2 = params(sum,(to,xo),-10,var);
+ode2 = ODEFIRST(sum,(to,xo),-10,var);
 
 display(ode2);
