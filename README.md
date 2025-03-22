@@ -12,25 +12,37 @@ For more information about the development and specifications of the Mathematica
 
 - **Lexical Analyzer:** Currently, the interpreter includes a lexical analyzer implemented using Flex and C. This component is essential for breaking down the source code into tokens.
 
-- **Simplicity and Efficiency:** The purpose of the interpreter is to facilitate the execution of instructions in the Mathematical Programming Language, making it accessible even for those with basic programming knowledge.
+- **Syntactic Validator:** Currently, the interpreter includes a syntactic validator implemented using Bison and C++. This component is essential ensuring that the sequence of tokens follows the syntactic rules defined for the language.
 
 ## Installation and Usage Instructions
 
 1. **Prerequisites:**
-   - Ensure you have Flex installed on your system.
-   - Have a C compiler (such as GCC) available.
+   - Ensure you have Flex, Bison and Make installed on your system.
+   - Have a C and C++ compiler (such as GCC) available.
 
 2. **Clone the Repository:**
 
-3. **Acces the scannerFlex folder**
+3. **Acces the scannerFlex folder or parserBison folder**
 
 4.  **Compile the Proyect**
-    - There is a makefile implemented
+    - There is a makefile provider for the scanner and parser.   
+   ```bash
+     make
+     make clean
+   ```
 
-5. **Run the scanner**
-   
-    ./scanner <souce_code_file> 
-    in the samples folder, will be found 24 archives as examples
+5. **Run the scanner or the parser**
+
+   There is several samples for the language, in the samples folder.
+   You can run then individually, example:
+   ```bash
+     ./scanner <source code>
+     ./validator <source code>
+   ```
+   Or run all the examples with:
+   ```bash
+     make run
+   ```
 
 
 
