@@ -6,13 +6,11 @@ This project focuses on developing an interpreter for the "Mathematical Programm
 
 The Mathematical Programming Language was designed to solve fundamental mathematics problems through numerical methods, providing simplified access to various mathematical algorithms. This language allows tasks such as calculating the determinant of a matrix or solving integrals using the Simpson's method, among other functionalities.
 
-For more information about the development and specifications of the Mathematical Programming Language, you can refer to the [project repository on GitHub](https://github.com/gerardorosetti/programming_languages_project).
-
 ## Features of the Interpreter
 
-- **Lexical Analyzer:** Currently, the interpreter includes a lexical analyzer implemented using Flex and C. This component is essential for breaking down the source code into tokens.
+- **Lexical Analyzer:** Currently, the interpreter includes a lexical analyzer implemented using Flex and C found in the scannerFlex folder. This component is essential for breaking down the source code into tokens.
 
-- **Syntactic Validator:** Currently, the interpreter includes a syntactic validator implemented using Bison and C++. This component is essential ensuring that the sequence of tokens follows the syntactic rules defined for the language.
+- **Syntactic Validator:** Currently, the interpreter includes a syntactic validator implemented using Bison and C++ found in the parserBison folder. This component is essential ensuring that the sequence of tokens follows the syntactic rules defined for the language.
 
 ## Installation and Usage Instructions
 
@@ -45,4 +43,6 @@ For more information about the development and specifications of the Mathematica
    ```
 
 
-
+## Acknowledgements
+For more information about the development and specifications of the Mathematical Programming Language, you can refer to 
+- [Mathematical Programming Lenguage Repository](https://github.com/gerardorosetti/programming_languages_project).
