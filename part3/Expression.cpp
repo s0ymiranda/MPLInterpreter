@@ -648,3 +648,38 @@ std::string Assigment::toString() const noexcept
 {
     return leftExpression->toString() + " + " + rightExpression->toString();
 }
+
+
+//Expression List
+Expression* ExpressionList::eval(Environment& env) const
+{
+    // for (Expression* expr : expressions)
+    // {
+    //     expr->eval(env);
+    // }
+    return nullptr;
+}
+std::string ExpressionList::toString() const noexcept
+{
+    std::string result;
+    for (const auto& expr : expressions)
+    {
+        result += expr->toString() + "\n";
+    }
+    return result;
+}
+void ExpressionList::addExpression(Expression* expr)
+{
+    expressions.push_back(expr);
+}
+void ExpressionList::destroy() noexcept
+{
+    for (auto& expr : expressions)
+    {
+        if (expr != nullptr)
+        {
+            expr->destroy();
+            delete expr;
+        }
+    }
+}

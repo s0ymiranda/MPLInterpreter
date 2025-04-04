@@ -8,8 +8,8 @@ END = 34
 
 all: validator
 
-validator: parser.o scanner.o main.o
-	$(CXX) scanner.o parser.o main.o -o validator
+validator: parser.o scanner.o main.o Expression.o
+	$(CXX) scanner.o parser.o main.o Expression.o -o validator
 
 parser.o: parser.c
 	$(CXX) -c parser.c
@@ -25,6 +25,9 @@ scanner.c: scanner.flex
 
 main.o: token.h main.c
 	$(CXX) -c main.c
+
+Expression.o: Expression.cpp Expression.hpp utils.hpp
+	$(CXX) -c Expression.cpp
 
 .PHONY:
 clean:

@@ -1,9 +1,15 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
+#include "Expression.hpp"
+
+#define YYSTYPE Expression*
 
 extern int yylex();
 int yyerror(const char*);
-ASTNodeInterface* parser_result{nullptr};
+extern char* yytext;
+Expression* parser_result{nullptr};
+
 %}
 
 %token TOKEN_PRINT
@@ -47,35 +53,51 @@ ASTNodeInterface* parser_result{nullptr};
 
 %%
 
-program : statement_list                                              { parser_result = $1; }
-        ;
+program : expressions_list { 
+    parser_result = $1; // Guarda el resultado del análisis.
+}
+;
 
-statement_list : statement statement_list
-               | statement
-               ;
+expressions_list : expression expressions_list { 
+    ExpressionList* exprList = dynamic_cast<ExpressionList*>($2);
+    if (exprList) {
+        exprList->addExpression($1);
+        $$ = exprList;
+    } else {
+        ExpressionList* newList = new ExpressionList();
+        newList->addExpression($1);
+        newList->addExpression($2);
+        $$ = newList;
+    }
+}
+| expression { 
+    ExpressionList* newList = new ExpressionList();
+    newList->addExpression($1);
+    $$ = newList;
+}
+;
 
-statement : print_statement
-          | display_statement
-          | assignment_statement
-          | expression
-          | expression TOKEN_SEMICOLON
-          ;
-
-print_statement : TOKEN_PRINT TOKEN_LPAREN expression TOKEN_RPAREN TOKEN_SEMICOLON;
-
-display_statement : TOKEN_DISPLAY TOKEN_LPAREN expression TOKEN_RPAREN TOKEN_SEMICOLON;
-
-assignment_statement : TOKEN_IDENTIFIER TOKEN_ASSIGN expression TOKEN_SEMICOLON
-                     | TOKEN_VAR TOKEN_ASSIGN numeric_expression TOKEN_SEMICOLON;
-
-expression : expression TOKEN_ADD term
-           | expression TOKEN_SUBSTRACT term
-           | term
+expression : print_expression
+           | display_expression
+           | assignment_expression
+           | math_expression TOKEN_SEMICOLON
            ;
 
-term : term TOKEN_MULTIPLY factor
-     | term TOKEN_DIVIDE factor
-     | term TOKEN_POW factor
+print_expression : TOKEN_PRINT TOKEN_LPAREN TOKEN_IDENTIFIER TOKEN_RPAREN TOKEN_SEMICOLON { $$ = new Print(yytext); };
+
+display_expression : TOKEN_DISPLAY TOKEN_LPAREN math_expression TOKEN_RPAREN TOKEN_SEMICOLON { $$ = new Display($3); };
+
+assignment_expression : TOKEN_IDENTIFIER TOKEN_ASSIGN math_expression TOKEN_SEMICOLON {/**/}
+                      | TOKEN_VAR TOKEN_ASSIGN numeric_expression TOKEN_SEMICOLON {/**/};
+
+math_expression : math_expression TOKEN_ADD term { $$ = new Addition($1, $3); }
+                | math_expression TOKEN_SUBSTRACT term { $$ = new Substraction($1, $3); }
+                | term
+                ;
+
+term : term TOKEN_MULTIPLY factor { $$ = new Multiplication($1, $3); }
+     | term TOKEN_DIVIDE factor { $$ = new Division($1, $3); }
+     | term TOKEN_POW factor { $$ = new Power($1, $3); }
      | factor
      ;
 
@@ -87,26 +109,26 @@ numeric_expression : TOKEN_NUMBER
                    | TOKEN_EULER
                    ;
 
-factor : TOKEN_NUMBER
-       | TOKEN_PI
-       | TOKEN_EULER
-       | TOKEN_VAR
-       | TOKEN_IDENTIFIER
-       | TOKEN_LPAREN expression TOKEN_RPAREN
+factor : TOKEN_NUMBER { $$ = new Number(strtod(yytext, NULL)); }
+       | TOKEN_PI { $$ = new PI(); }
+       | TOKEN_EULER { $$ = new EULER(); }
+       | TOKEN_VAR { $$ = new Variable(*yytext); }
+       | TOKEN_IDENTIFIER { /*$$ = new Number($1);*/ }
+       | TOKEN_LPAREN math_expression TOKEN_RPAREN
        | pair_expression
        | vector_expression
        | matrix_expression
        | function_call
        ;
 
-pair_expression : TOKEN_LPAREN expression TOKEN_COMMA expression TOKEN_RPAREN;
+pair_expression : TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN {$$ = new Pair($2, $4); };
 
 vector_expression : TOKEN_LBRACKET expression_list TOKEN_RBRACKET;
 
 matrix_expression : TOKEN_LBRACE vector_list TOKEN_RBRACE;
 
-expression_list : expression_list TOKEN_COMMA expression
-                | expression
+expression_list : expression_list TOKEN_COMMA math_expression
+                | math_expression
                 ;
 
 vector_list : vector_list TOKEN_COMMA vector_expression
@@ -115,18 +137,18 @@ vector_list : vector_list TOKEN_COMMA vector_expression
             | TOKEN_IDENTIFIER
             ;
 
-trigonometric_function_call: TOKEN_SIN TOKEN_LPAREN expression TOKEN_RPAREN
-                           | TOKEN_COS TOKEN_LPAREN expression TOKEN_RPAREN
-                           | TOKEN_TAN TOKEN_LPAREN expression TOKEN_RPAREN
-                           | TOKEN_CTG TOKEN_LPAREN expression TOKEN_RPAREN
+trigonometric_function_call: TOKEN_SIN TOKEN_LPAREN math_expression TOKEN_RPAREN
+                           | TOKEN_COS TOKEN_LPAREN math_expression TOKEN_RPAREN
+                           | TOKEN_TAN TOKEN_LPAREN math_expression TOKEN_RPAREN
+                           | TOKEN_CTG TOKEN_LPAREN math_expression TOKEN_RPAREN
                            ;
 
-logarithmic_function_call : TOKEN_LOG TOKEN_LPAREN expression TOKEN_COMMA expression TOKEN_RPAREN
-                          | TOKEN_LN TOKEN_LPAREN expression TOKEN_RPAREN
+logarithmic_function_call : TOKEN_LOG TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN { $$ = new Logarithm($3, $5); }
+                          | TOKEN_LN TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = new NaturalLogarithm($3); }
                           ;
 
-root_function_call : TOKEN_SQRT TOKEN_LPAREN expression TOKEN_RPAREN
-                   | TOKEN_ROOT TOKEN_LPAREN expression TOKEN_COMMA expression TOKEN_RPAREN
+root_function_call : TOKEN_SQRT TOKEN_LPAREN math_expression TOKEN_RPAREN
+                   | TOKEN_ROOT TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN
                    ;
 
 matrix_func_param : TOKEN_IDENTIFIER
@@ -160,9 +182,9 @@ matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
                      | TOKEN_DETERMINANT TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
                      ;
 
-operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_param TOKEN_COMMA expression TOKEN_COMMA var_or_id_param TOKEN_RPAREN
+operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_param TOKEN_COMMA math_expression TOKEN_COMMA var_or_id_param TOKEN_RPAREN
                          | TOKEN_INTERPOLATE TOKEN_LPAREN vector_or_id_param TOKEN_COMMA number_or_id_param TOKEN_RPAREN
-                         | TOKEN_ODEFIRST TOKEN_LPAREN expression TOKEN_COMMA pair_or_id_param TOKEN_COMMA number_or_id_param TOKEN_COMMA var_or_id_param TOKEN_RPAREN
+                         | TOKEN_ODEFIRST TOKEN_LPAREN math_expression TOKEN_COMMA pair_or_id_param TOKEN_COMMA number_or_id_param TOKEN_COMMA var_or_id_param TOKEN_RPAREN
                          ;
 
 function_call : logarithmic_function_call

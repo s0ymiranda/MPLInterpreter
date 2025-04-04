@@ -408,3 +408,15 @@ class Assigment : public BinaryExpression
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
+
+class ExpressionList : public Expression
+{
+private:
+    std::vector<Expression*> expressions;
+public:
+    ExpressionList() = default;
+    Expression* eval(Environment& env) const override;
+    std::string toString() const noexcept override;
+    void addExpression(Expression* expr);
+    void destroy() noexcept override;
+};
