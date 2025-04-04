@@ -8,7 +8,7 @@ public:
     virtual Expression* eval(Environment&) const = 0;
     virtual std::string toString() const noexcept = 0;
     virtual void destroy() noexcept = 0;
-    ~Expression();
+    virtual ~Expression();
 };
 
 class Unit : public Expression
@@ -17,6 +17,7 @@ public:
     Unit();
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept;
+    void destroy() noexcept override;
 };
 
 class Value : public Expression

@@ -8,9 +8,11 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 
 ## Features of the Interpreter
 
-- **Lexical Analyzer:** Currently, the interpreter includes a lexical analyzer implemented using Flex and C found in the scannerFlex folder. This component is essential for breaking down the source code into tokens.
+- **Lexical Analyzer:** Currently, the interpreter includes a lexical analyzer implemented using Flex and C, the "scanner.flex" file.
 
-- **Syntactic Validator:** Currently, the interpreter includes a syntactic validator implemented using Bison and C++ found in the parserBison folder. This component is essential ensuring that the sequence of tokens follows the syntactic rules defined for the language.
+- **Syntactic Validator:** Currently, the interpreter includes a syntactic validator implemented using Bison and C++ the "parser.bison" file.
+
+- **Abstract Syntax Tree:** Currenty the interpreter from the Syntactic Validator construct a AST.
 
 ## Installation and Usage Instructions
 
@@ -20,26 +22,21 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 
 2. **Clone the Repository:**
 
-3. **Acces the scannerFlex folder or parserBison folder**
-
-4.  **Compile the Proyect**
-    - There is a makefile provider for the scanner and parser.   
+3.  **Compile the Proyect**
+    - There is a makefile provide.
    ```bash
      make
      make clean
    ```
 
-5. **Run the scanner or the parser**
-
-   There is several samples for the language, in the samples folder.
-   You can run then individually, example:
+4. **Run the validator**
+    There is provide a make run, that uses all the files in the samples folder
    ```bash
-     ./scanner <source code>
-     ./validator <source code>
+      make run
    ```
-   Or run all the examples with:
+   Or run the samples individually:
    ```bash
-     make run
+      ./build/validator /samples/"nameof the file"
    ```
 
 

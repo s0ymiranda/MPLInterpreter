@@ -34,6 +34,7 @@ int main(int argc, char* argv[])
         printf("Parse successful! AST: \n");
         printf("====================== \n");
         printf("%s", parser_result->toString().c_str());
+        parser_result->destroy();
     }
     else
     {

@@ -2,8 +2,9 @@
 #include <token.h>
 #include <string.h>
 int num_column = 0;
-char* test;
+char* id;
 char* assing_id;
+char assing_variable;
 int take = 1;
 %}
 
@@ -78,6 +79,11 @@ VARIABLE   '{LETTER}'
                     }
 {VARIABLE}          {
                         num_column += yyleng;
+                        if (take)
+                        {
+                            assing_variable = yytext[1];
+                            take = false;
+                        }
                         return TOKEN_VAR;
                     }
 
@@ -186,10 +192,12 @@ VARIABLE   '{LETTER}'
                         num_column += yyleng;
                         if (take)
                         {
+                            free(assing_id);
                             assing_id = strdup(yytext);
                             take = false;
                         }
-                            test = strdup(yytext);
+                        free(id);
+                        id = strdup(yytext);
                         return TOKEN_IDENTIFIER;
                     }
 

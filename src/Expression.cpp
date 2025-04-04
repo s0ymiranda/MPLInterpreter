@@ -12,6 +12,7 @@ std::string Unit::toString() const noexcept
 {
     return "";
 }
+void Unit::destroy() noexcept {}
 
 // Value
 Value::Value(DataType _dataType) : dataType{_dataType} {}
@@ -336,6 +337,7 @@ void Vector::destroy() noexcept
         {
             exp->destroy();
             delete exp;
+            exp = nullptr;
         }
     }
     vectorExpression.clear();
@@ -636,7 +638,7 @@ void Print::destroy() noexcept {}
 
 Expression* Assigment::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string Assigment::toString() const noexcept
 {

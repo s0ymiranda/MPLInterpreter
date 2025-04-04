@@ -8,8 +8,9 @@
 extern int yylex();
 int yyerror(const char*);
 extern char* yytext;
-extern char* test;
+extern char* id;
 extern char* assing_id;
+extern char assing_variable;
 Expression* parser_result{nullptr};
 
 %}
@@ -86,14 +87,14 @@ expression : print_expression
            | math_expression TOKEN_SEMICOLON                        { $$ = $1; }
            ;
 
-print_expression : TOKEN_PRINT TOKEN_LPAREN TOKEN_IDENTIFIER TOKEN_RPAREN TOKEN_SEMICOLON   {   $$ = new Print(std::string(test));}
+print_expression : TOKEN_PRINT TOKEN_LPAREN TOKEN_IDENTIFIER TOKEN_RPAREN TOKEN_SEMICOLON   {   $$ = new Print(std::string(id));}
                  ;
 
 display_expression : TOKEN_DISPLAY TOKEN_LPAREN math_expression TOKEN_RPAREN TOKEN_SEMICOLON {  $$ = new Display($3); }
                    ;
 
 assignment_expression : TOKEN_IDENTIFIER TOKEN_ASSIGN math_expression TOKEN_SEMICOLON { $$ = new Assigment(new Name(std::string(assing_id)), $3);}
-                      | TOKEN_VAR TOKEN_ASSIGN numeric_expression TOKEN_SEMICOLON { $$ = new Assigment(new Variable(yytext[1]), $3);}
+                      | TOKEN_VAR TOKEN_ASSIGN numeric_expression TOKEN_SEMICOLON { $$ = new Assigment(new Variable(assing_variable), $3);}
                       ;
 
 math_expression : math_expression TOKEN_ADD term { $$ = new Addition($1, $3); }
@@ -119,7 +120,7 @@ factor : TOKEN_NUMBER {  $$ = new Number(strtod(yytext, NULL)); }
        | TOKEN_PI { $$ = new PI(); }
        | TOKEN_EULER { $$ = new EULER(); }
        | TOKEN_VAR {  $$ = new Variable(yytext[1]); }
-       | TOKEN_IDENTIFIER {  $$ = new Name(std::string(test)); }
+       | TOKEN_IDENTIFIER {  $$ = new Name(std::string(id)); }
        | TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = $2; }
        | pair_expression
        | vector_expression
@@ -216,19 +217,19 @@ vector_list : vector_list TOKEN_COMMA vector_expression                         
                                                                                             ExpressionList* list = dynamic_cast<ExpressionList*>($1);
                                                                                             if (list)
                                                                                             {
-                                                                                                list->addExpression(new Name(std::string(test)));
+                                                                                                list->addExpression(new Name(std::string(id)));
                                                                                                 $$ = list;
                                                                                             } else
                                                                                             {
                                                                                                 ExpressionList* newList = new ExpressionList();
                                                                                                 newList->addExpression($1);
-                                                                                                newList->addExpression(new Name(std::string(test)));
+                                                                                                newList->addExpression(new Name(std::string(id)));
                                                                                                 $$ = newList;
                                                                                             }
                                                                                         }
             | TOKEN_IDENTIFIER                                                          {
                                                                                             ExpressionList* newList = new ExpressionList();
-                                                                                            newList->addExpression(new Name(std::string(test)));
+                                                                                            newList->addExpression(new Name(std::string(id)));
                                                                                             $$ = newList;
                                                                                         }
             ;
@@ -247,16 +248,16 @@ root_function_call : TOKEN_SQRT TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ =
                    | TOKEN_ROOT TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN { $$ = new Root($3, $5); }
                    ;
 
-matrix_func_param : TOKEN_IDENTIFIER { $$ = new Name(std::string(test)); }
+matrix_func_param : TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
                   | TOKEN_LBRACE vector_list TOKEN_RBRACE { $$ = $2; }
                   ;
 
 pair_or_id_param : pair_expression { $$ = $1; }
-                 | TOKEN_IDENTIFIER { $$ = new Name(std::string(test)); }
+                 | TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
                  ;
 
 var_or_id_param : TOKEN_VAR { $$ = new Variable(yytext[1]); }
-                | TOKEN_IDENTIFIER { $$ = new Name(std::string(test)); }
+                | TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
                 ;
 
 integral_or_bisectionroot : TOKEN_BISECTIONROOT { $$ = new Name("BISECTIONROOT"); }
@@ -264,11 +265,11 @@ integral_or_bisectionroot : TOKEN_BISECTIONROOT { $$ = new Name("BISECTIONROOT")
                           ;
 
 vector_or_id_param : vector_expression { $$ = $1; }
-                   | TOKEN_IDENTIFIER { $$ = new Name(std::string(test)); }
+                   | TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
                    ;
 
 number_or_id_param : TOKEN_NUMBER { $$ = new Number(strtod(yytext, NULL)); }
-                   | TOKEN_IDENTIFIER { $$ = new Name(std::string(test)); }
+                   | TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
                    ;
 
 matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new InverseMatrix($3); }
