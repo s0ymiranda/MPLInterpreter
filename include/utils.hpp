@@ -9,6 +9,7 @@
 #include <limits>
 #include <iomanip>
 #include <string>
+#include <string_view>
 
 enum class DataType
 {
@@ -22,13 +23,5 @@ enum class DataType
 };
 
 class Expression;
-class Statement;
 
-using Environment = std::forward_list<std::pair<char, Expression*>>;
-
-class ASTNodeInterface
-{
-public:
-    virtual ~ASTNodeInterface() noexcept {};
-    virtual void destroy() noexcept = 0;
-};
+using Environment = std::forward_list<std::pair<std::string_view, Expression*>>;

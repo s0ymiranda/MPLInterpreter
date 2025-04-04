@@ -1,8 +1,2 @@
-*.o
-scanner.c
-scanner
-parser.c
-parser.output
-validator
-
+/build
 .vscode/

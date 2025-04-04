@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <Expression.hpp>
 
 extern FILE* yyin;
 extern int yyparse();
+extern Expression* parser_result;
 
 void usage(char* argv[])
 {
@@ -29,12 +31,14 @@ int main(int argc, char* argv[])
 
     if (result == 0)
     {
-        printf("Parse successful!\n");
+        printf("Parse successful! AST: \n");
+        printf("====================== \n");
+        printf("%s", parser_result->toString().c_str());
+        parser_result->destroy();
     }
     else
     {
         printf("Parse failed!\n");
     }
-
     return 0;
 }
