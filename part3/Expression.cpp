@@ -342,26 +342,24 @@ void Vector::destroy() noexcept
 }
 
 //Matrix
-Matrix::Matrix(std::vector<std::vector<Expression*>> _matrixExpression) : Value(DataType::Matrix), matrixExpression(_matrixExpression) {}
+Matrix::Matrix(std::vector<Expression*> _matrixExpression) : Value(DataType::Matrix), matrixExpression(_matrixExpression) {}
 Expression* Matrix::eval(Environment& env) const
 {
+    //TO DO VERIFY THAT THE EXPRESSION WITHIN THE VECTOR ARE VECTOR EXPRESSION
     return nullptr;
 }
 std::string Matrix::toString() const noexcept
 {
     std::string result;
-    for (std::vector<Expression*> vec : matrixExpression)
+    for (auto& vec : matrixExpression)
     {
-        for (Expression* exp : vec)
-        {
-            std::string element = exp->toString();
-            result += element +" ";
-        }
+        std::string element = vec->toString();
+        result += element +" ";
         result += "\n";
     }
     return result;
 }
-std::vector<std::vector<Expression*>> Matrix::getMatrixExpression() const
+std::vector<Expression*> Matrix::getMatrixExpression() const
 {
     return matrixExpression;
 }
@@ -369,15 +367,11 @@ void Matrix::destroy() noexcept
 {
     for (auto& vec : matrixExpression)
     {
-        for (auto exp : vec)
-        {
-            if (exp != nullptr)
-            {
-                exp->destroy();
-                delete exp;
-            }
-        }
-        vec.clear();
+       if (vec != nullptr)
+       {
+            vec->destroy();
+            delete vec;
+       }
     }
     matrixExpression.clear();
 }

@@ -268,12 +268,12 @@ public:
 class Matrix : public Value
 {
 protected:
-    std::vector<std::vector<Expression*>> matrixExpression;
+    std::vector<Expression*> matrixExpression;
 public:
-    Matrix(std::vector<std::vector<Expression*>> _matrixExpression);
+    Matrix(std::vector<Expression*> _matrixExpression);
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
-    std::vector<std::vector<Expression*>> getMatrixExpression() const;
+    std::vector<Expression*> getMatrixExpression() const;
     void destroy() noexcept override;
 };
 
