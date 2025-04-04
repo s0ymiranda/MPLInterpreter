@@ -35,6 +35,10 @@ protected:
     Expression* expression;
 public:
     UnaryExpression(Expression* exp);
+    Expression* getExpression()
+    {
+        return expression;
+    }
     void destroy() noexcept override;
 };
 
@@ -45,6 +49,14 @@ protected:
     Expression* rightExpression;
 public:
     BinaryExpression(Expression* _leftExpression, Expression* _rightExpression);
+    Expression* getLeftExpression()
+    {
+        return leftExpression;
+    }
+    Expression* getRightExpression()
+    {
+        return leftExpression;
+    }
     void destroy() noexcept override;
 };
 
@@ -418,5 +430,9 @@ public:
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void addExpression(Expression* expr);
+    std::vector<Expression*> getVectorExpression() const
+    {
+        return expressions;
+    }
     void destroy() noexcept override;
 };

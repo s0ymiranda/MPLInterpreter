@@ -53,12 +53,12 @@ Expression* parser_result{nullptr};
 
 %%
 
-program : expressions_list { 
+program : expressions_list {
     parser_result = $1; // Guarda el resultado del análisis.
 }
 ;
 
-expressions_list : expression expressions_list { 
+expressions_list : expression expressions_list {
     ExpressionList* exprList = dynamic_cast<ExpressionList*>($2);
     if (exprList) {
         exprList->addExpression($1);
@@ -70,7 +70,7 @@ expressions_list : expression expressions_list {
         $$ = newList;
     }
 }
-| expression { 
+| expression {
     ExpressionList* newList = new ExpressionList();
     newList->addExpression($1);
     $$ = newList;
@@ -80,112 +80,196 @@ expressions_list : expression expressions_list {
 expression : print_expression
            | display_expression
            | assignment_expression
-           | math_expression TOKEN_SEMICOLON
+           | math_expression TOKEN_SEMICOLON { $$ = $1; }
            ;
 
-print_expression : TOKEN_PRINT TOKEN_LPAREN TOKEN_IDENTIFIER TOKEN_RPAREN TOKEN_SEMICOLON { $$ = new Print(yytext); };
+print_expression : TOKEN_PRINT TOKEN_LPAREN TOKEN_IDENTIFIER TOKEN_RPAREN TOKEN_SEMICOLON { 
+    $$ = new Print(std::string(yytext)); 
+};
 
-display_expression : TOKEN_DISPLAY TOKEN_LPAREN math_expression TOKEN_RPAREN TOKEN_SEMICOLON { $$ = new Display($3); };
+display_expression : TOKEN_DISPLAY TOKEN_LPAREN math_expression TOKEN_RPAREN TOKEN_SEMICOLON { 
+    $$ = new Display($3); 
+};
 
-assignment_expression : TOKEN_IDENTIFIER TOKEN_ASSIGN math_expression TOKEN_SEMICOLON {/**/}
-                      | TOKEN_VAR TOKEN_ASSIGN numeric_expression TOKEN_SEMICOLON {/**/};
+assignment_expression : TOKEN_IDENTIFIER TOKEN_ASSIGN math_expression TOKEN_SEMICOLON {
+    $$ = new Assigment(new Name(std::string(yytext)), $3);
+}
+| TOKEN_VAR TOKEN_ASSIGN numeric_expression TOKEN_SEMICOLON {
+    $$ = new Assigment(new Variable(yytext[1]), $3);
+};
 
 math_expression : math_expression TOKEN_ADD term { $$ = new Addition($1, $3); }
                 | math_expression TOKEN_SUBSTRACT term { $$ = new Substraction($1, $3); }
-                | term
+                | term { $$ = $1; }
                 ;
 
 term : term TOKEN_MULTIPLY factor { $$ = new Multiplication($1, $3); }
      | term TOKEN_DIVIDE factor { $$ = new Division($1, $3); }
      | term TOKEN_POW factor { $$ = new Power($1, $3); }
-     | factor
+     | factor { $$ = $1; }
      ;
 
-numeric_expression : TOKEN_NUMBER
+numeric_expression : TOKEN_NUMBER { $$ = new Number(strtod(yytext, NULL)); }
                    | trigonometric_function_call
                    | logarithmic_function_call
                    | root_function_call
-                   | TOKEN_PI
-                   | TOKEN_EULER
+                   | TOKEN_PI { $$ = new PI(); }
+                   | TOKEN_EULER { $$ = new EULER(); }
                    ;
 
 factor : TOKEN_NUMBER { $$ = new Number(strtod(yytext, NULL)); }
        | TOKEN_PI { $$ = new PI(); }
        | TOKEN_EULER { $$ = new EULER(); }
-       | TOKEN_VAR { $$ = new Variable(*yytext); }
-       | TOKEN_IDENTIFIER { /*$$ = new Number($1);*/ }
-       | TOKEN_LPAREN math_expression TOKEN_RPAREN
+       | TOKEN_VAR { $$ = new Variable(yytext[1]); }
+       | TOKEN_IDENTIFIER { $$ = new Name(std::string(yytext)); }
+       | TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = $2; }
        | pair_expression
        | vector_expression
        | matrix_expression
        | function_call
        ;
 
-pair_expression : TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN {$$ = new Pair($2, $4); };
+pair_expression : TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN {
+    $$ = new Pair($2, $4);
+};
 
-vector_expression : TOKEN_LBRACKET expression_list TOKEN_RBRACKET;
+vector_expression : TOKEN_LBRACKET expression_list TOKEN_RBRACKET {
+    std::vector<Expression*> exprs;
+    ExpressionList* list = dynamic_cast<ExpressionList*>($2);
+    if (list) {
+        exprs = list->getVectorExpression();
+    } else {
+        exprs.push_back($2);
+    }
+    $$ = new Vector(exprs);
+};
 
-matrix_expression : TOKEN_LBRACE vector_list TOKEN_RBRACE;
+matrix_expression : TOKEN_LBRACE vector_list TOKEN_RBRACE {
+    std::vector<std::vector<Expression*>> matrix;
+    ExpressionList* list = dynamic_cast<ExpressionList*>($2);
+    if (list) {
+        for (auto expr : list->getVectorExpression()) {
+            Vector* vec = dynamic_cast<Vector*>(expr);
+            if (vec) {
+                matrix.push_back(vec->getVectorExpression());
+            }
+        }
+    }
+    $$ = new Matrix(matrix);
+};
 
-expression_list : expression_list TOKEN_COMMA math_expression
-                | math_expression
-                ;
+expression_list : expression_list TOKEN_COMMA math_expression {
+    ExpressionList* list = dynamic_cast<ExpressionList*>($1);
+    if (list) {
+        list->addExpression($3);
+        $$ = list;
+    } else {
+        ExpressionList* newList = new ExpressionList();
+        newList->addExpression($1);
+        newList->addExpression($3);
+        $$ = newList;
+    }
+}
+| math_expression { 
+    ExpressionList* newList = new ExpressionList();
+    newList->addExpression($1);
+    $$ = newList;
+}
+;
 
-vector_list : vector_list TOKEN_COMMA vector_expression
-            | vector_expression
-            | vector_list TOKEN_COMMA TOKEN_IDENTIFIER
-            | TOKEN_IDENTIFIER
-            ;
+vector_list : vector_list TOKEN_COMMA vector_expression {
+    ExpressionList* list = dynamic_cast<ExpressionList*>($1);
+    if (list) {
+        list->addExpression($3);
+        $$ = list;
+    } else {
+        ExpressionList* newList = new ExpressionList();
+        newList->addExpression($1);
+        newList->addExpression($3);
+        $$ = newList;
+    }
+}
+| vector_expression { 
+    ExpressionList* newList = new ExpressionList();
+    newList->addExpression($1);
+    $$ = newList;
+}
+| vector_list TOKEN_COMMA TOKEN_IDENTIFIER {
+    ExpressionList* list = dynamic_cast<ExpressionList*>($1);
+    if (list) {
+        list->addExpression(new Name(std::string(yytext)));
+        $$ = list;
+    } else {
+        ExpressionList* newList = new ExpressionList();
+        newList->addExpression($1);
+        newList->addExpression(new Name(std::string(yytext)));
+        $$ = newList;
+    }
+}
+| TOKEN_IDENTIFIER { 
+    ExpressionList* newList = new ExpressionList();
+    newList->addExpression(new Name(std::string(yytext)));
+    $$ = newList;
+}
+;
 
-trigonometric_function_call: TOKEN_SIN TOKEN_LPAREN math_expression TOKEN_RPAREN
-                           | TOKEN_COS TOKEN_LPAREN math_expression TOKEN_RPAREN
-                           | TOKEN_TAN TOKEN_LPAREN math_expression TOKEN_RPAREN
-                           | TOKEN_CTG TOKEN_LPAREN math_expression TOKEN_RPAREN
+trigonometric_function_call: TOKEN_SIN TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = new Sine($3); }
+                           | TOKEN_COS TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = new Cosine($3); }
+                           | TOKEN_TAN TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = new Tangent($3); }
+                           | TOKEN_CTG TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = new Cotangent($3); }
                            ;
 
 logarithmic_function_call : TOKEN_LOG TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN { $$ = new Logarithm($3, $5); }
                           | TOKEN_LN TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = new NaturalLogarithm($3); }
                           ;
 
-root_function_call : TOKEN_SQRT TOKEN_LPAREN math_expression TOKEN_RPAREN
-                   | TOKEN_ROOT TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN
+root_function_call : TOKEN_SQRT TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = new SquareRoot($3); }
+                   | TOKEN_ROOT TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN { $$ = new Root($3, $5); }
                    ;
 
-matrix_func_param : TOKEN_IDENTIFIER
-                  | TOKEN_LBRACE vector_list TOKEN_RBRACE
+matrix_func_param : TOKEN_IDENTIFIER { $$ = new Name(std::string(yytext)); }
+                  | TOKEN_LBRACE vector_list TOKEN_RBRACE { $$ = $2; }
                   ;
 
-pair_or_id_param : pair_expression
-                 | TOKEN_IDENTIFIER
+pair_or_id_param : pair_expression { $$ = $1; }
+                 | TOKEN_IDENTIFIER { $$ = new Name(std::string(yytext)); }
                  ;
 
-var_or_id_param : TOKEN_VAR
-                | TOKEN_IDENTIFIER
+var_or_id_param : TOKEN_VAR { $$ = new Variable(yytext[1]); }
+                | TOKEN_IDENTIFIER { $$ = new Name(std::string(yytext)); }
                 ;
 
-integral_or_bisectionroot : TOKEN_BISECTIONROOT
-                          | TOKEN_INTEGRAL
+integral_or_bisectionroot : TOKEN_BISECTIONROOT { $$ = new Name("BISECTIONROOT"); }
+                          | TOKEN_INTEGRAL { $$ = new Name("INTEGRAL"); }
                           ;
 
-vector_or_id_param : vector_expression
-                   | TOKEN_IDENTIFIER
+vector_or_id_param : vector_expression { $$ = $1; }
+                   | TOKEN_IDENTIFIER { $$ = new Name(std::string(yytext)); }
                    ;
 
-number_or_id_param : TOKEN_NUMBER
-                   | TOKEN_IDENTIFIER
+number_or_id_param : TOKEN_NUMBER { $$ = new Number(strtod(yytext, NULL)); }
+                   | TOKEN_IDENTIFIER { $$ = new Name(std::string(yytext)); }
                    ;
 
-matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
-                     | TOKEN_MATRIXLU TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
-                     | TOKEN_TRIDIAGONAL TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
-                     | TOKEN_REALEIGENVALUES TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
-                     | TOKEN_DETERMINANT TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
+matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new InverseMatrix($3); }
+                     | TOKEN_MATRIXLU TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new MatrixLU($3); }
+                     | TOKEN_TRIDIAGONAL TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new TridiagonalMatrix($3); }
+                     | TOKEN_REALEIGENVALUES TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new RealEigenvalues($3); }
+                     | TOKEN_DETERMINANT TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new Determinant($3); }
                      ;
 
-operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_param TOKEN_COMMA math_expression TOKEN_COMMA var_or_id_param TOKEN_RPAREN
-                         | TOKEN_INTERPOLATE TOKEN_LPAREN vector_or_id_param TOKEN_COMMA number_or_id_param TOKEN_RPAREN
-                         | TOKEN_ODEFIRST TOKEN_LPAREN math_expression TOKEN_COMMA pair_or_id_param TOKEN_COMMA number_or_id_param TOKEN_COMMA var_or_id_param TOKEN_RPAREN
-                         ;
+operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_param TOKEN_COMMA math_expression TOKEN_COMMA var_or_id_param TOKEN_RPAREN {
+    if (dynamic_cast<Name*>($1)->getName() == "BISECTIONROOT") {
+        $$ = new FindRootBisection($3, $5, $7);
+    } else {
+        $$ = new Integral($3, $5, $7);
+    }
+}
+| TOKEN_INTERPOLATE TOKEN_LPAREN vector_or_id_param TOKEN_COMMA number_or_id_param TOKEN_RPAREN { $$ = new Interpolate($3, $5); }
+| TOKEN_ODEFIRST TOKEN_LPAREN math_expression TOKEN_COMMA pair_or_id_param TOKEN_COMMA number_or_id_param TOKEN_COMMA var_or_id_param TOKEN_RPAREN {
+    $$ = new ODEFirstOrderInitialValues($3, $5, $7, $9);
+}
+;
 
 function_call : logarithmic_function_call
               | root_function_call
@@ -195,7 +279,6 @@ function_call : logarithmic_function_call
               ;
 
 %%
-
 
 int yyerror(const char* s)
 {

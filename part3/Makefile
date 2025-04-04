@@ -24,7 +24,7 @@ scanner.c: scanner.flex
 	$(FLEX) -o scanner.c scanner.flex
 
 main.o: token.h main.c
-	$(CXX) -c main.c
+	$(CXX) -c main.cpp
 
 Expression.o: Expression.cpp Expression.hpp utils.hpp
 	$(CXX) -c Expression.cpp
