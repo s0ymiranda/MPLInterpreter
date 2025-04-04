@@ -2,10 +2,11 @@
 
 #include "utils.hpp"
 
-class Expression : public ASTNodeInterface
+class Expression
 {
 public:
     virtual std::string toString() const noexcept = 0;
+    virtual void destroy() noexcept = 0;
     ~Expression();
 };
 
@@ -79,6 +80,16 @@ public:
     Variable(char _variable);
     std::string toString() const noexcept override;
     char getVariable() const;
+};
+
+class Name : public Value
+{
+private:
+    std::string name;
+public:
+    Name(std::string_view _name);
+    std::string toString() const noexcept override;
+    std::string getName() const noexcept;
 };
 
 class Addition : public BinaryExpression {
@@ -224,10 +235,9 @@ public:
 class InverseMatrix : public Value
 {
 private:
-    Matrix* matrix;
-    Expression* gauss(std::vector<std::vector<Expression*>> matrix) const;
+    Expression* matrix;
 public:
-    InverseMatrix(Matrix* _matrix);
+    InverseMatrix(Expression* _matrix);
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -235,10 +245,9 @@ public:
 class MatrixLU : public Value
 {
 private:
-    Matrix* matrix;
-    std::pair<std::vector<std::vector<Expression*>>, std::vector<std::vector<Expression*>>> lowerUpperDecomposition(std::vector<std::vector<Expression*>> matrix) const;
+    Expression* matrix;
 public:
-    MatrixLU(Matrix* _matrix);
+    MatrixLU(Expression* _matrix);
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -246,27 +255,27 @@ public:
 class TridiagonalMatrix : public Value
 {
 private:
-    Matrix* matrix;
+    Expression* matrix;
 public:
-    TridiagonalMatrix(Matrix* _matrix);
+    TridiagonalMatrix(Expression* _matrix);
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
 class RealEigenvalues : public Value
 {
 private:
-    Matrix* matrix;
+    Expression* matrix;
 public:
-    RealEigenvalues(Matrix* _matrix);
+    RealEigenvalues(Expression* _matrix);
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
 class Determinant : public Value
 {
 private:
-    Matrix* matrix;
+    Expression* matrix;
 public:
-    Determinant(Matrix* _matrix);
+    Determinant(Expression* _matrix);
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -278,24 +287,25 @@ public:
     std::string toString() const noexcept override;
 };
 
-class Integral : public Expression // Resolution by Simpson Method
+class Integral : public Expression
 {
 private:
-    Pair* interval;
-    Function* function;
-    Variable* variable;
+    Expression* interval;
+    Expression* function;
+    Expression* variable;
 public:
-    Integral(Pair* _interval, Function* _function, Variable* _variable);
+    Integral(Expression* _interval, Expression* _function, Expression* _variable);
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
 
-class Interpolate : public Vector // Resolution by Lagrange
+class Interpolate : public Expression
 {
 private:
-    Number* numInter;
+    Expression* vectorExpression;
+    Expression* numInter;
 public:
-    Interpolate(std::vector<Expression*> _vectorExpression, Number* _numInter);
+    Interpolate(Expression* _vectorExpression, Expression* _numInter);
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -303,12 +313,12 @@ public:
 class ODEFirstOrderInitialValues : public Expression
 {
 private:
-    Function* funct;
-    Pair* initialValue;
-    Number* tFinal;
-    Variable* variable;
+    Expression* funct;
+    Expression* initialValue;
+    Expression* tFinal;
+    Expression* variable;
 public:
-    ODEFirstOrderInitialValues(Function* _funct, Pair* _initialValue, Number* _tFinal, Variable* _variable);
+    ODEFirstOrderInitialValues(Expression* _funct, Expression* _initialValue, Expression* _tFinal, Expression* _variable);
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -316,22 +326,33 @@ public:
 class FindRootBisection : public Expression
 {
 private:
-    Pair* interval;
-    Function* function;
-    Variable* variable;
-    Number* iterationLimit;
+    Expression* interval;
+    Expression* function;
+    Expression* variable;
+    Expression* iterationLimit;
 public:
-    FindRootBisection(Pair* _interval, Function* _function, Variable* _variable, Number* _iterationLimit = new Number(100));
+    FindRootBisection(Expression* _interval, Expression* _function, Expression* _variable, Expression* _iterationLimit = new Number(100));
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
 
-class Name : public Value
+
+class Display : public Expression
 {
 private:
-    std::string name;
+    Expression* expression;
 public:
-    Name(std::string_view _name);
+    Display(Expression* _expression);
     std::string toString() const noexcept override;
-    std::string getName() const noexcept;
+    void destroy() noexcept override;
+};
+
+class Print : public Expression
+{
+private:
+    std::string message;
+public:
+    Print(std::string _message);
+    std::string toString() const noexcept override;
+    void destroy() noexcept override;
 };

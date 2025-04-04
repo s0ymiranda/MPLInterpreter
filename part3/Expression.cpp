@@ -13,16 +13,21 @@ void Value::destroy() noexcept {}
 UnaryExpression::UnaryExpression(Expression* _expression) : expression(_expression) {}
 void UnaryExpression::destroy() noexcept
 {
-    expression->destroy();
-    delete expression;
+    if (expression != nullptr)
+    {
+        expression->destroy();
+        delete expression;
+    }
 }
 // Binary Expression
 BinaryExpression::BinaryExpression(Expression* _leftExpression, Expression* _rigthExpression) : leftExpression(_leftExpression), rigthExpression(_rigthExpression) {}
 void BinaryExpression::destroy() noexcept
 {
-    leftExpression->destroy();
-    delete leftExpression;
-
+    if (leftExpression != nullptr)
+    {
+        leftExpression->destroy();
+        delete leftExpression;
+    }
     if (rigthExpression != nullptr)
     {
         rigthExpression->destroy();
@@ -69,6 +74,17 @@ std::string Variable::toString() const noexcept
 char Variable::getVariable() const
 {
     return variable;
+}
+
+//Name
+Name::Name(std::string_view _name) : Value(DataType::Name), name(_name) {}
+std::string Name::toString() const noexcept
+{
+    return name;
+}
+std::string Name::getName() const noexcept
+{
+    return name;
 }
 
 // Addition
@@ -181,12 +197,12 @@ Expression* Pair::getSecond()
 
 void Pair::destroy() noexcept
 {
-    if (first)
+    if (first != nullptr)
     {
         first->destroy();
         delete first;
     }
-    if (second)
+    if (second != nullptr)
     {
         second->destroy();
         delete second;
@@ -229,7 +245,7 @@ void Vector::destroy() noexcept
 {
     for (auto exp : vectorExpression)
     {
-        if (exp)
+        if (exp != nullptr)
         {
             exp->destroy();
             delete exp;
@@ -265,7 +281,7 @@ void Matrix::destroy() noexcept
     {
         for (auto exp : vec)
         {
-            if (exp)
+            if (exp != nullptr)
             {
                 exp->destroy();
                 delete exp;
@@ -277,7 +293,7 @@ void Matrix::destroy() noexcept
 }
 
 // Inverse Matrix
-InverseMatrix::InverseMatrix(Matrix* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
+InverseMatrix::InverseMatrix(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
 
 std::string InverseMatrix::toString() const noexcept
 {
@@ -285,14 +301,14 @@ std::string InverseMatrix::toString() const noexcept
 }
 void InverseMatrix::destroy() noexcept
 {
-    if (matrix)
+    if (matrix != nullptr)
     {
         matrix->destroy();
         delete matrix;
     }
 }
 // LU Matrix
-MatrixLU::MatrixLU(Matrix* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
+MatrixLU::MatrixLU(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
 
 std::string MatrixLU::toString() const noexcept
 {
@@ -301,14 +317,14 @@ std::string MatrixLU::toString() const noexcept
 
 void MatrixLU::destroy() noexcept
 {
-    if (matrix)
+    if (matrix != nullptr)
     {
         matrix->destroy();
         delete matrix;
     }
 }
 
-TridiagonalMatrix::TridiagonalMatrix(Matrix* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
+TridiagonalMatrix::TridiagonalMatrix(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
 
 std::string TridiagonalMatrix::toString() const noexcept
 {
@@ -316,7 +332,7 @@ std::string TridiagonalMatrix::toString() const noexcept
 }
 void TridiagonalMatrix::destroy() noexcept
 {
-    if (matrix)
+    if (matrix != nullptr)
     {
         matrix->destroy();
         delete matrix;
@@ -324,7 +340,7 @@ void TridiagonalMatrix::destroy() noexcept
 }
 
 // Eigenvalues
-RealEigenvalues::RealEigenvalues(Matrix* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
+RealEigenvalues::RealEigenvalues(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
 
 std::string RealEigenvalues::toString() const noexcept
 {
@@ -332,14 +348,14 @@ std::string RealEigenvalues::toString() const noexcept
 }
 void RealEigenvalues::destroy() noexcept
 {
-    if (matrix)
+    if (matrix != nullptr)
     {
         matrix->destroy();
         delete matrix;
     }
 }
 // Determinant
-Determinant::Determinant(Matrix* _matrix) : Value(DataType::Number), matrix(_matrix) {}
+Determinant::Determinant(Expression* _matrix) : Value(DataType::Number), matrix(_matrix) {}
 
 std::string Determinant::toString() const noexcept
 {
@@ -348,7 +364,7 @@ std::string Determinant::toString() const noexcept
 
 void Determinant::destroy() noexcept
 {
-    if (matrix)
+    if (matrix != nullptr)
     {
         matrix->destroy();
         delete matrix;
@@ -363,7 +379,7 @@ std::string Function::toString() const noexcept
 }
 
 //Integral
-Integral::Integral(Pair* _interval, Function* _function, Variable* _variable) : interval(_interval), function(_function), variable(_variable) {}
+Integral::Integral(Expression* _interval, Expression* _function, Expression* _variable) : interval(_interval), function(_function), variable(_variable) {}
 
 std::string Integral::toString() const noexcept
 {
@@ -372,56 +388,43 @@ std::string Integral::toString() const noexcept
 }
 void Integral::destroy() noexcept
 {
-    if (interval)
+    if (interval != nullptr)
     {
         interval->destroy();
         delete interval;
     }
-    if (function)
+    if (function != nullptr)
     {
         function->destroy();
         delete function;
     }
-    if (variable)
+    if (variable != nullptr)
     {
         variable->destroy();
         delete variable;
     }
 }
 // Interpolate
-Interpolate::Interpolate(std::vector<Expression*> _vectorExpression, Number* _numInter) : Vector(_vectorExpression), numInter(_numInter) {}
+Interpolate::Interpolate(Expression* _vectorExpression, Expression* _numInter) : vectorExpression(_vectorExpression), numInter(_numInter) {}
 std::string Interpolate::toString() const noexcept
 {
-    std::string result = "[  ";
-    for (auto exp : vectorExpression)
-    {
-        std::string element = exp->toString();
-        result += element +"  ";
-    }
-    result += "]\nInterpolate Number: " +numInter->toString();
-
-    return result;
+    return vectorExpression->toString() + "\nInterpolate Number: " +numInter->toString();
 }
 void Interpolate::destroy() noexcept
 {
-    if (numInter)
+    if (vectorExpression != nullptr)
+    {
+        vectorExpression->destroy();
+        delete vectorExpression;
+    }
+    if (numInter != nullptr)
     {
         numInter->destroy();
         delete numInter;
     }
-
-    for (auto exp : vectorExpression)
-    {
-        if (exp)
-        {
-            exp->destroy();
-            delete exp;
-        }
-    }
-    vectorExpression.clear();
 }
 //ODE First
-ODEFirstOrderInitialValues::ODEFirstOrderInitialValues(Function* _funct, Pair* _initialValue, Number* _tFinal, Variable* _variable) : funct(_funct), initialValue(_initialValue), tFinal(_tFinal), variable(_variable) {}
+ODEFirstOrderInitialValues::ODEFirstOrderInitialValues(Expression* _funct, Expression* _initialValue, Expression* _tFinal, Expression* _variable) : funct(_funct), initialValue(_initialValue), tFinal(_tFinal), variable(_variable) {}
 
 std::string ODEFirstOrderInitialValues::toString() const noexcept
 {
@@ -430,29 +433,29 @@ std::string ODEFirstOrderInitialValues::toString() const noexcept
 
 void ODEFirstOrderInitialValues::destroy() noexcept
 {
-    if (funct)
+    if (funct != nullptr)
     {
         funct->destroy();
         delete funct;
     }
-    if (initialValue)
+    if (initialValue != nullptr)
     {
         initialValue->destroy();
         delete initialValue;
     }
-    if (tFinal)
+    if (tFinal != nullptr)
     {
         tFinal->destroy();
         delete tFinal;
     }
-    if (variable)
+    if (variable != nullptr)
     {
         variable->destroy();
         delete variable;
     }
 }
 
-FindRootBisection::FindRootBisection(Pair* _interval, Function* _function, Variable* _variable, Number* _iterationLimit) : interval(_interval), function(_function), variable(_variable), iterationLimit(_iterationLimit) {}
+FindRootBisection::FindRootBisection(Expression* _interval, Expression* _function, Expression* _variable, Expression* _iterationLimit) : interval(_interval), function(_function), variable(_variable), iterationLimit(_iterationLimit) {}
 
 std::string FindRootBisection::toString() const noexcept
 {
@@ -460,39 +463,53 @@ std::string FindRootBisection::toString() const noexcept
 }
 void FindRootBisection::destroy() noexcept
 {
-    if (interval)
+    if (interval != nullptr)
     {
         interval->destroy();
         delete interval;
     }
-    if (function)
+    if (function != nullptr)
     {
         function->destroy();
         delete function;
     }
-    if (variable)
+    if (variable != nullptr)
     {
         variable->destroy();
         delete variable;
     }
-    if (iterationLimit)
+    if (iterationLimit != nullptr)
     {
         iterationLimit->destroy();
         delete iterationLimit;
     }
 }
 
-Name::Name(std::string_view _name) : Value(DataType::Name), name(_name) {}
-std::string Name::toString() const noexcept
+Display::Display(Expression* _expression) : expression(_expression) {}
+
+std::string Display::toString() const noexcept
 {
-    return name;
-}
-std::string Name::getName() const noexcept
-{
-    return name;
+    if (expression == nullptr)
+    {
+        return "NULLPTR";
+    }
+    return expression->toString();
 }
 
-int main()
+void Display::destroy() noexcept
 {
-    return 0;
+    if (expression != nullptr)
+    {
+        expression->destroy();
+        delete expression;
+    }
 }
+
+Print::Print(std::string _message) : message(_message) {}
+
+std::string Print::toString() const noexcept
+{
+    return message;
+}
+
+void Print::destroy() noexcept {}
