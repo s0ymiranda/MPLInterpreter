@@ -5,9 +5,18 @@
 class Expression
 {
 public:
+    virtual Expression* eval(Environment&) const = 0;
     virtual std::string toString() const noexcept = 0;
     virtual void destroy() noexcept = 0;
     ~Expression();
+};
+
+class Unit : public Expression
+{
+public:
+    Unit();
+    Expression* eval(Environment& env) const override;
+    std::string toString() const noexcept;
 };
 
 class Value : public Expression
@@ -33,9 +42,9 @@ class BinaryExpression : public Expression
 {
 protected:
     Expression* leftExpression;
-    Expression* rigthExpression;
+    Expression* rightExpression;
 public:
-    BinaryExpression(Expression* _leftExpression, Expression* _rigthExpression);
+    BinaryExpression(Expression* _leftExpression, Expression* _rightExpression);
     void destroy() noexcept override;
 };
 
@@ -45,6 +54,7 @@ protected:
     std::string value = "IMPOSSIBLE";
 public:
     Impossible();
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept;
 };
 
@@ -54,6 +64,7 @@ protected:
     double number;
 public:
     Number(double _number);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     double getNumber() const;
 };
@@ -62,6 +73,7 @@ class PI : public Value
 {
 public:
     PI();
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -69,6 +81,7 @@ class EULER : public Value
 {
 public:
     EULER();
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -78,6 +91,7 @@ protected:
     char variable;
 public:
     Variable(char _variable);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     char getVariable() const;
 };
@@ -88,20 +102,24 @@ private:
     std::string name;
 public:
     Name(std::string_view _name);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     std::string getName() const noexcept;
 };
 
-class Addition : public BinaryExpression {
+class Addition : public BinaryExpression
+{
 public:
     using BinaryExpression::BinaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
-class Subtraction : public BinaryExpression {
-
+class Substraction : public BinaryExpression
+{
 public:
     using BinaryExpression::BinaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -109,6 +127,7 @@ class Multiplication : public BinaryExpression
 {
 public:
     using BinaryExpression::BinaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -120,10 +139,11 @@ public:
     std::string toString() const noexcept override;
 };
 
-class Power : public BinaryExpression {
-
+class Power : public BinaryExpression
+{
 public:
     using BinaryExpression::BinaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -131,6 +151,7 @@ class NaturalLogarithm : public UnaryExpression
 {
 public:
     using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -138,6 +159,7 @@ class Logarithm : public BinaryExpression
 {
 public:
     using BinaryExpression::BinaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -145,6 +167,7 @@ class SquareRoot : public UnaryExpression
 {
 public:
     using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -152,6 +175,7 @@ class Root : public BinaryExpression
 {
 public:
     using BinaryExpression::BinaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -159,6 +183,7 @@ class Sine : public UnaryExpression
 {
 public:
     using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -166,6 +191,7 @@ class Cosine : public UnaryExpression
 {
 public:
     using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -173,6 +199,7 @@ class Tangent : public UnaryExpression
 {
 public:
     using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -180,6 +207,7 @@ class Cotangent : public UnaryExpression
 {
 public:
     using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -190,6 +218,7 @@ private:
     Expression* second;
 public:
     Pair(Expression* _first, Expression* _second);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     Expression* getFirst();
     Expression* getSecond();
@@ -200,6 +229,7 @@ class PairFirst : public UnaryExpression
 {
 public:
     using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -207,6 +237,7 @@ class PairSecond : public UnaryExpression
 {
 public:
     using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -216,6 +247,7 @@ protected:
     std::vector<Expression*> vectorExpression;
 public:
     Vector(std::vector<Expression*> _vectorExpression);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     std::vector<Expression*> getVectorExpression() const;
     void destroy() noexcept override;
@@ -227,6 +259,7 @@ protected:
     std::vector<std::vector<Expression*>> matrixExpression;
 public:
     Matrix(std::vector<std::vector<Expression*>> _matrixExpression);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     std::vector<std::vector<Expression*>> getMatrixExpression() const;
     void destroy() noexcept override;
@@ -238,6 +271,7 @@ private:
     Expression* matrix;
 public:
     InverseMatrix(Expression* _matrix);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -248,6 +282,7 @@ private:
     Expression* matrix;
 public:
     MatrixLU(Expression* _matrix);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -258,6 +293,7 @@ private:
     Expression* matrix;
 public:
     TridiagonalMatrix(Expression* _matrix);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -267,6 +303,7 @@ private:
     Expression* matrix;
 public:
     RealEigenvalues(Expression* _matrix);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -276,6 +313,7 @@ private:
     Expression* matrix;
 public:
     Determinant(Expression* _matrix);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -284,6 +322,7 @@ class Function : public UnaryExpression
 {
 public:
     using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
 };
 
@@ -295,6 +334,7 @@ private:
     Expression* variable;
 public:
     Integral(Expression* _interval, Expression* _function, Expression* _variable);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -306,6 +346,7 @@ private:
     Expression* numInter;
 public:
     Interpolate(Expression* _vectorExpression, Expression* _numInter);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -319,6 +360,7 @@ private:
     Expression* variable;
 public:
     ODEFirstOrderInitialValues(Expression* _funct, Expression* _initialValue, Expression* _tFinal, Expression* _variable);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -332,6 +374,7 @@ private:
     Expression* iterationLimit;
 public:
     FindRootBisection(Expression* _interval, Expression* _function, Expression* _variable, Expression* _iterationLimit = new Number(100));
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -343,6 +386,7 @@ private:
     Expression* expression;
 public:
     Display(Expression* _expression);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
@@ -353,6 +397,14 @@ private:
     std::string message;
 public:
     Print(std::string _message);
+    Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     void destroy() noexcept override;
+};
+
+class Assigment : public BinaryExpression
+{
+    using BinaryExpression::BinaryExpression;
+    Expression* eval(Environment& env) const override;
+    std::string toString() const noexcept override;
 };
