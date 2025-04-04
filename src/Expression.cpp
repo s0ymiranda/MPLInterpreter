@@ -1,4 +1,4 @@
-#include "Expression.hpp"
+#include <Expression.hpp>
 
 Expression::~Expression() {}
 
@@ -612,7 +612,7 @@ std::string Display::toString() const noexcept
     {
         return "NULLPTR";
     }
-    return expression->toString();
+    return "Display(" + expression->toString() + ")";
 }
 void Display::destroy() noexcept
 {
@@ -630,7 +630,7 @@ Expression* Print::eval(Environment& env) const
 }
 std::string Print::toString() const noexcept
 {
-    return message;
+    return "Print(" + message + ")";
 }
 void Print::destroy() noexcept {}
 
@@ -640,7 +640,7 @@ Expression* Assigment::eval(Environment& env) const
 }
 std::string Assigment::toString() const noexcept
 {
-    return leftExpression->toString() + " + " + rightExpression->toString();
+    return leftExpression->toString() + " = " + rightExpression->toString();
 }
 
 

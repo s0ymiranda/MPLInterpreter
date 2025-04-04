@@ -1,6 +1,10 @@
 %{
-#include "token.h"
-int num_column = 1;
+#include <token.h>
+#include <string.h>
+int num_column = 0;
+char* test;
+char* assing_id;
+int take = 1;
 %}
 
 %option yylineno
@@ -16,7 +20,7 @@ VARIABLE   '{LETTER}'
 {SPACE}             {
                         if (yytext[0] == '\n')
                         {
-                            num_column = 1;
+                            num_column = 0;
                         }
                         else
                         {
@@ -61,6 +65,7 @@ VARIABLE   '{LETTER}'
                     }
 ";"                 {
                         num_column += yyleng;
+                        take = 1;
                         return TOKEN_SEMICOLON;
                     }
 "="                 {
@@ -94,20 +99,20 @@ VARIABLE   '{LETTER}'
                     }
 "^"                 {
                         num_column += yyleng;
-                        return TOKEN_POWER;
+                        return TOKEN_POW;
                     }
 
 "LOG"               {
                         num_column += yyleng;
-                        return TOKEN_LOGARITHM;
+                        return TOKEN_LOG;
                     }
 "LN"                {
                         num_column += yyleng;
-                        return TOKEN_NATURAL_LOGARITHM;
+                        return TOKEN_LN;
                     }
 "SQRT"              {
                         num_column += yyleng;
-                        return TOKEN_SQUARE_ROOT;
+                        return TOKEN_SQRT;
                     }
 "ROOT"              {
                         num_column += yyleng;
@@ -115,19 +120,19 @@ VARIABLE   '{LETTER}'
                     }
 "SIN"               {
                         num_column += yyleng;
-                        return TOKEN_SINE;
+                        return TOKEN_SIN;
                     }
 "COS"               {
                         num_column += yyleng;
-                        return TOKEN_COSINE;
+                        return TOKEN_COS;
                     }
 "TAN"               {
                         num_column += yyleng;
-                        return TOKEN_TANGENT;
+                        return TOKEN_TAN;
                     }
 "CTG"               {
                         num_column += yyleng;
-                        return TOKEN_COTANGENT;
+                        return TOKEN_CTG;
                     }
 "INVERSE"           {
                         num_column += yyleng;
@@ -135,7 +140,7 @@ VARIABLE   '{LETTER}'
                     }
 "MATRIXLU"          {
                         num_column += yyleng;
-                        return TOKEN_MATRIX_LU;
+                        return TOKEN_MATRIXLU;
                     }
 "TRIDIAGONAL"       {
                         num_column += yyleng;
@@ -143,7 +148,7 @@ VARIABLE   '{LETTER}'
                     }
 "REALEIGENVALUES"   {
                         num_column += yyleng;
-                        return TOKEN_REAL_EIGENVALUES;
+                        return TOKEN_REALEIGENVALUES;
                     }
 "DETERMINANT"       {
                         num_column += yyleng;
@@ -151,7 +156,7 @@ VARIABLE   '{LETTER}'
                     }
 "BISECTIONROOT"     {
                         num_column += yyleng;
-                        return TOKEN_BISECTION_ROOT;
+                        return TOKEN_BISECTIONROOT;
                     }
 "PI"                {
                         num_column += yyleng;
@@ -179,6 +184,12 @@ VARIABLE   '{LETTER}'
 
 {IDENTIFIER}        {
                         num_column += yyleng;
+                        if (take)
+                        {
+                            assing_id = strdup(yytext);
+                            take = false;
+                        }
+                            test = strdup(yytext);
                         return TOKEN_IDENTIFIER;
                     }
 
