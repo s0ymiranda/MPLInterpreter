@@ -12,7 +12,7 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 
 - **Syntactic Validator:** Currently, the interpreter includes a syntactic validator implemented using Bison and C++ the "parser.bison" file.
 
-- **Abstract Syntax Tree:** Currenty the interpreter from the Syntactic Validator construct a AST.
+- **Abstract Syntax Tree:** Currenty the Syntactic Validator constructs a AST.
 
 ## Installation and Usage Instructions
 
