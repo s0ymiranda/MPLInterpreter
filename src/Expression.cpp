@@ -352,7 +352,6 @@ void Vector::destroy() noexcept
 Matrix::Matrix(std::vector<Expression*> _matrixExpression) : Value(DataType::Matrix), matrixExpression(_matrixExpression) {}
 Expression* Matrix::eval(Environment& env) const
 {
-    //TO DO VERIFY THAT THE EXPRESSION WITHIN THE VECTOR ARE VECTOR EXPRESSION
     return nullptr;
 }
 std::string Matrix::toString() const noexcept
