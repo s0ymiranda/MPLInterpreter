@@ -347,7 +347,6 @@ void Vector::destroy() noexcept
 Matrix::Matrix(std::vector<Expression*> _matrixExpression) : Value(DataType::Matrix), matrixExpression(_matrixExpression) {}
 Expression* Matrix::eval(Environment& env) const
 {
-    //TO DO VERIFY THAT THE EXPRESSION WITHIN THE VECTOR ARE VECTOR EXPRESSION
     return nullptr;
 }
 std::string Matrix::toString() const noexcept
@@ -645,14 +644,9 @@ std::string Assigment::toString() const noexcept
     return leftExpression->toString() + " = " + rightExpression->toString();
 }
 
-
 //Expression List
 Expression* ExpressionList::eval(Environment& env) const
 {
-    // for (Expression* expr : expressions)
-    // {
-    //     expr->eval(env);
-    // }
     return nullptr;
 }
 std::string ExpressionList::toString() const noexcept
