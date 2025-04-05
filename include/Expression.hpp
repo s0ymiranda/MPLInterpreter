@@ -425,15 +425,15 @@ class Assigment : public BinaryExpression
 class ExpressionList : public Expression
 {
 private:
-    std::vector<Expression*> expressions;
+    std::list<Expression*> expressions;
+    size_t sz;
 public:
-    ExpressionList() = default;
+    ExpressionList();
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
-    void addExpression(Expression* expr);
-    std::vector<Expression*> getVectorExpression() const
-    {
-        return expressions;
-    }
+    void addExpressionFront(Expression* expr);
+    void addExpressionBack(Expression* expr);
+    std::vector<Expression*> getVectorExpression() const;
     void destroy() noexcept override;
+    size_t size() const noexcept {return sz;}
 };

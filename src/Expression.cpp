@@ -30,6 +30,7 @@ void UnaryExpression::destroy() noexcept
     {
         expression->destroy();
         delete expression;
+        expression = nullptr;
     }
 }
 
@@ -41,11 +42,13 @@ void BinaryExpression::destroy() noexcept
     {
         leftExpression->destroy();
         delete leftExpression;
+        leftExpression = nullptr;
     }
     if (rightExpression != nullptr)
     {
         rightExpression->destroy();
         delete rightExpression;
+        rightExpression = nullptr;
     }
 }
 
@@ -53,7 +56,7 @@ void BinaryExpression::destroy() noexcept
 Impossible::Impossible() : Value(DataType::Impossible) {}
 Expression* Impossible::eval(Environment& env) const
 {
-    return  new Impossible();
+    return new Impossible();
 }
 std::string Impossible::toString() const noexcept
 {
@@ -280,11 +283,13 @@ void Pair::destroy() noexcept
     {
         first->destroy();
         delete first;
+        first = nullptr;
     }
     if (second != nullptr)
     {
         second->destroy();
         delete second;
+        second = nullptr;
     }
 }
 
@@ -317,7 +322,7 @@ Expression* Vector::eval(Environment& env) const
 std::string Vector::toString() const noexcept
 {
     std::string result = "[  ";
-    for (auto exp : vectorExpression)
+    for (const auto& exp : vectorExpression)
     {
         std::string element = exp->toString();
         result += element +"  ";
@@ -353,7 +358,7 @@ Expression* Matrix::eval(Environment& env) const
 std::string Matrix::toString() const noexcept
 {
     std::string result;
-    for (auto& vec : matrixExpression)
+    for (const auto& vec : matrixExpression)
     {
         std::string element = vec->toString();
         result += element +" ";
@@ -373,6 +378,7 @@ void Matrix::destroy() noexcept
        {
             vec->destroy();
             delete vec;
+            vec = nullptr;
        }
     }
     matrixExpression.clear();
@@ -394,6 +400,7 @@ void InverseMatrix::destroy() noexcept
     {
         matrix->destroy();
         delete matrix;
+        matrix = nullptr;
     }
 }
 
@@ -413,6 +420,7 @@ void MatrixLU::destroy() noexcept
     {
         matrix->destroy();
         delete matrix;
+        matrix = nullptr;
     }
 }
 
@@ -431,6 +439,7 @@ void TridiagonalMatrix::destroy() noexcept
     {
         matrix->destroy();
         delete matrix;
+        matrix = nullptr;
     }
 }
 
@@ -450,6 +459,7 @@ void RealEigenvalues::destroy() noexcept
     {
         matrix->destroy();
         delete matrix;
+        matrix = nullptr;
     }
 }
 
@@ -469,6 +479,7 @@ void Determinant::destroy() noexcept
     {
         matrix->destroy();
         delete matrix;
+        matrix = nullptr;
     }
 }
 
@@ -499,16 +510,19 @@ void Integral::destroy() noexcept
     {
         interval->destroy();
         delete interval;
+        interval = nullptr;
     }
     if (function != nullptr)
     {
         function->destroy();
         delete function;
+        function = nullptr;
     }
     if (variable != nullptr)
     {
         variable->destroy();
         delete variable;
+        variable = nullptr;
     }
 }
 
@@ -528,11 +542,13 @@ void Interpolate::destroy() noexcept
     {
         vectorExpression->destroy();
         delete vectorExpression;
+        vectorExpression = nullptr;
     }
     if (numInter != nullptr)
     {
         numInter->destroy();
         delete numInter;
+        numInter = nullptr;
     }
 }
 
@@ -552,21 +568,25 @@ void ODEFirstOrderInitialValues::destroy() noexcept
     {
         funct->destroy();
         delete funct;
+        funct = nullptr;
     }
     if (initialValue != nullptr)
     {
         initialValue->destroy();
         delete initialValue;
+        initialValue = nullptr;
     }
     if (tFinal != nullptr)
     {
         tFinal->destroy();
         delete tFinal;
+        tFinal = nullptr;
     }
     if (variable != nullptr)
     {
         variable->destroy();
         delete variable;
+        variable = nullptr;
     }
 }
 
@@ -585,28 +605,32 @@ void FindRootBisection::destroy() noexcept
     {
         interval->destroy();
         delete interval;
+        interval = nullptr;
     }
     if (function != nullptr)
     {
         function->destroy();
         delete function;
+        function = nullptr;
     }
     if (variable != nullptr)
     {
         variable->destroy();
         delete variable;
+        variable = nullptr;
     }
     if (iterationLimit != nullptr)
     {
         iterationLimit->destroy();
         delete iterationLimit;
+        iterationLimit = nullptr;
     }
 }
 
 Display::Display(Expression* _expression) : expression(_expression) {}
 Expression* Display::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string Display::toString() const noexcept
 {
@@ -622,13 +646,14 @@ void Display::destroy() noexcept
     {
         expression->destroy();
         delete expression;
+        expression = nullptr;
     }
 }
 
 Print::Print(std::string _message) : message(_message) {}
 Expression* Print::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string Print::toString() const noexcept
 {
@@ -645,14 +670,10 @@ std::string Assigment::toString() const noexcept
     return leftExpression->toString() + " = " + rightExpression->toString();
 }
 
-
 //Expression List
+ExpressionList::ExpressionList() : expressions{}, sz{0} {}
 Expression* ExpressionList::eval(Environment& env) const
 {
-    // for (Expression* expr : expressions)
-    // {
-    //     expr->eval(env);
-    // }
     return nullptr;
 }
 std::string ExpressionList::toString() const noexcept
@@ -664,9 +685,24 @@ std::string ExpressionList::toString() const noexcept
     }
     return result;
 }
-void ExpressionList::addExpression(Expression* expr)
+void ExpressionList::addExpressionFront(Expression* expr)
 {
+    ++sz;
+    expressions.push_front(expr);
+}
+void ExpressionList::addExpressionBack(Expression* expr)
+{
+    ++sz;
     expressions.push_back(expr);
+}
+std::vector<Expression*> ExpressionList::getVectorExpression() const
+{
+    std::vector<Expression*> expressions_vec;
+    for (const auto& expr : expressions)
+    {
+        expressions_vec.push_back(expr);
+    }
+    return expressions_vec;
 }
 void ExpressionList::destroy() noexcept
 {
@@ -678,4 +714,5 @@ void ExpressionList::destroy() noexcept
             delete expr;
         }
     }
+    expressions.clear();
 }

@@ -12,7 +12,7 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 
 - **Syntactic Validator:** Currently, the interpreter includes a syntactic validator implemented using Bison and C++ the "parser.bison" file.
 
-- **Abstract Syntax Tree:** Currenty the interpreter from the Syntactic Validator construct a AST.
+- **Abstract Syntax Tree:** Currenty from the Syntactic Validator it is constructed an AST.
 
 ## Installation and Usage Instructions
 
@@ -29,17 +29,17 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
      make clean
    ```
 
-4. **Run the validator**
+4. **Run the parser**
     There is provide a make run, that uses all the files in the samples folder
    ```bash
       make run
    ```
    Or run the samples individually:
    ```bash
-      ./build/validator /samples/"nameof the file"
+      ./build/parser /samples/"name of the file"
    ```
 
 
 ## Acknowledgements
-For more information about the development and specifications of the Mathematical Programming Language, you can refer to 
+For more information about the development and specifications of the Mathematical Programming Language, you can refer to
 - [Mathematical Programming Lenguage Repository](https://github.com/gerardorosetti/programming_languages_project).
