@@ -33,6 +33,8 @@ int main(int argc, char* argv[])
     {
         printf("Parse successful! AST: \n");
         printf("====================== \n");
+        auto exs = dynamic_cast<ExpressionList*>(parser_result);
+        printf("List size: %lu\n", exs->size());
         printf("%s", parser_result->toString().c_str());
         parser_result->destroy();
     }

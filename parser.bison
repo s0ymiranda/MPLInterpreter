@@ -63,20 +63,20 @@ expressions_list : expression expressions_list                      {
                                                                         ExpressionList* exprList = dynamic_cast<ExpressionList*>($2);
                                                                         if (exprList)
                                                                         {
-                                                                            exprList->addExpression($1);
+                                                                            exprList->addExpressionFront($1);
                                                                             $$ = exprList;
                                                                         }
                                                                         else
                                                                         {
                                                                             ExpressionList* newList = new ExpressionList();
-                                                                            newList->addExpression($1);
-                                                                            newList->addExpression($2);
+                                                                            newList->addExpressionFront($1);
+                                                                            newList->addExpressionFront($2);
                                                                             $$ = newList;
                                                                         }
                                                                     }
                  | expression                                       {
                                                                         ExpressionList* newList = new ExpressionList();
-                                                                        newList->addExpression($1);
+                                                                        newList->addExpressionFront($1);
                                                                         $$ = newList;
                                                                     }
                  ;
@@ -133,6 +133,7 @@ pair_expression : TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN
 
 vector_expression : TOKEN_LBRACKET expression_list TOKEN_RBRACKET                       {
                                                                                             std::vector<Expression*> exprs;
+                                                                                            //std::list<Expression*> exprs;
                                                                                             ExpressionList* list = dynamic_cast<ExpressionList*>($2);
                                                                                             if (list)
                                                                                             {
@@ -148,6 +149,7 @@ vector_expression : TOKEN_LBRACKET expression_list TOKEN_RBRACKET               
 
 matrix_expression : TOKEN_LBRACE vector_list TOKEN_RBRACE                               {
                                                                                             std::vector<Expression*> matrix;
+                                                                                            //std::list<Expression*> matrix;
                                                                                             ExpressionList* list = dynamic_cast<ExpressionList*>($2);
                                                                                             if (list)
                                                                                             {
@@ -176,20 +178,20 @@ expression_list : expression_list TOKEN_COMMA math_expression                   
                                                                                             ExpressionList* list = dynamic_cast<ExpressionList*>($1);
                                                                                             if (list)
                                                                                             {
-                                                                                                list->addExpression($3);
+                                                                                                list->addExpressionBack($3);
                                                                                                 $$ = list;
                                                                                             }
                                                                                             else
                                                                                             {
                                                                                                 ExpressionList* newList = new ExpressionList();
-                                                                                                newList->addExpression($1);
-                                                                                                newList->addExpression($3);
+                                                                                                newList->addExpressionBack($1);
+                                                                                                newList->addExpressionBack($3);
                                                                                                 $$ = newList;
                                                                                             }
                                                                                         }
                 | math_expression                                                       {
                                                                                             ExpressionList* newList = new ExpressionList();
-                                                                                            newList->addExpression($1);
+                                                                                            newList->addExpressionBack($1);
                                                                                             $$ = newList;
                                                                                         }
                 ;
@@ -198,38 +200,38 @@ vector_list : vector_list TOKEN_COMMA vector_expression                         
                                                                                             ExpressionList* list = dynamic_cast<ExpressionList*>($1);
                                                                                             if (list)
                                                                                             {
-                                                                                                list->addExpression($3);
+                                                                                                list->addExpressionBack($3);
                                                                                                 $$ = list;
                                                                                             } else
                                                                                             {
                                                                                                 ExpressionList* newList = new ExpressionList();
-                                                                                                newList->addExpression($1);
-                                                                                                newList->addExpression($3);
+                                                                                                newList->addExpressionBack($1);
+                                                                                                newList->addExpressionBack($3);
                                                                                                 $$ = newList;
                                                                                             }
                                                                                         }
             | vector_expression                                                         {
                                                                                             ExpressionList* newList = new ExpressionList();
-                                                                                            newList->addExpression($1);
+                                                                                            newList->addExpressionBack($1);
                                                                                             $$ = newList;
                                                                                         }
             | vector_list TOKEN_COMMA TOKEN_IDENTIFIER                                  {
                                                                                             ExpressionList* list = dynamic_cast<ExpressionList*>($1);
                                                                                             if (list)
                                                                                             {
-                                                                                                list->addExpression(new Name(std::string(id)));
+                                                                                                list->addExpressionBack(new Name(std::string(id)));
                                                                                                 $$ = list;
                                                                                             } else
                                                                                             {
                                                                                                 ExpressionList* newList = new ExpressionList();
-                                                                                                newList->addExpression($1);
-                                                                                                newList->addExpression(new Name(std::string(id)));
+                                                                                                newList->addExpressionBack($1);
+                                                                                                newList->addExpressionBack(new Name(std::string(id)));
                                                                                                 $$ = newList;
                                                                                             }
                                                                                         }
             | TOKEN_IDENTIFIER                                                          {
                                                                                             ExpressionList* newList = new ExpressionList();
-                                                                                            newList->addExpression(new Name(std::string(id)));
+                                                                                            newList->addExpressionBack(new Name(std::string(id)));
                                                                                             $$ = newList;
                                                                                         }
             ;

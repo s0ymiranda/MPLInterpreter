@@ -5,6 +5,7 @@
 #include <memory>
 #include <vector>
 #include <forward_list>
+#include <list>
 #include <functional>
 #include <limits>
 #include <iomanip>
