@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
         printf("====================== \n");
         auto exs = dynamic_cast<ExpressionList*>(parser_result);
         printf("List size: %lu\n", exs->size());
-        printf("%s", parser_result->toString().c_str());
+        printf("%s", parser_result->eval()->toString().c_str());
         parser_result->destroy();
     }
     else

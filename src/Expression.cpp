@@ -4,9 +4,9 @@ Expression::~Expression() {}
 
 //Unit
 Unit::Unit() {}
-Expression* Unit::eval(Environment& env) const
+Expression* Unit::eval(Environment&) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string Unit::toString() const noexcept
 {
@@ -67,7 +67,11 @@ std::string Impossible::toString() const noexcept
 Number::Number(double _number) : Value(DataType::Number), number{_number} {}
 Expression* Number::eval(Environment& env) const
 {
-    return nullptr;
+    if (std::abs(number) <= 0.0000000001)
+    {
+        return new Number(0.0);
+    }
+    return new Number(number);
 }
 std::string Number::toString() const noexcept
 {
@@ -82,7 +86,7 @@ double Number::getNumber() const
 PI::PI() : Value(DataType::Number) {}
 Expression* PI::eval(Environment& env) const
 {
-    return nullptr;
+    return new Number(M_PI);
 }
 std::string PI::toString() const noexcept
 {
@@ -92,7 +96,7 @@ std::string PI::toString() const noexcept
 EULER::EULER() : Value(DataType::Number){}
 Expression* EULER::eval(Environment& env) const
 {
-    return nullptr;
+    return new Number(M_E);
 }
 std::string EULER::toString() const noexcept
 {
@@ -103,7 +107,22 @@ std::string EULER::toString() const noexcept
 Variable::Variable(char _variable) : Value(DataType::Variable), variable{_variable} {}
 Expression* Variable::eval(Environment& env) const
 {
-    return nullptr;
+    if (!env.empty())
+    {
+        for (auto pair : env)
+        {
+            if (pair.first == std::string{variable})
+            {
+                auto num = dynamic_cast<Number*>(pair.second->eval(env));
+                if (num != nullptr)
+                {
+                    return num;
+                }
+                return pair.second->eval(env);
+            }
+        }
+    }
+    return new Variable(variable);
 }
 std::string Variable::toString() const noexcept
 {
@@ -118,7 +137,17 @@ char Variable::getVariable() const
 Name::Name(std::string_view _name) : Value(DataType::Name), name(_name) {}
 Expression* Name::eval(Environment& env) const
 {
-    return nullptr;
+    if (!env.empty())
+    {
+        for (auto pair : env)
+        {
+            if (pair.first == name)
+            {
+                return pair.second->eval(env);
+            }
+        }
+    }
+    return const_cast<Name*>(this);
 }
 std::string Name::toString() const noexcept
 {
@@ -132,7 +161,56 @@ std::string Name::getName() const noexcept
 // Addition
 Expression* Addition::eval(Environment& env) const
 {
-    return nullptr;
+    auto exp1 = leftExpression->eval(env);
+    auto exp2 = rigthExpression->eval(env);
+    auto element1 = dynamic_cast<Value*>(exp1);
+    auto element2 = dynamic_cast<Value*>(exp2);
+
+    if (element1 == nullptr || element2 == nullptr)
+    {
+        auto unique = std::make_unique<Addition>(exp1, exp2);
+        return unique.get();
+    }
+    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    {
+        auto unique = std::make_unique<Addition>(exp1, exp2);
+        return unique.get();
+    }
+    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix)
+    {
+        auto matrix1 = dynamic_cast<Matrix>(element1*)->getMatrixExpression();
+        auto matrix2 = dynamic_cast<Matrix>(element2*)->getMatrixExpression();
+        if (matrix1.size() != matrix2.size())
+        {
+            std::unique_ptr<Expression> imp = std::make_unique<Impossible>();
+            return imp.get();
+        }
+        std::vector<std::vector<Expression*>> newMatrix;
+        for (size_t i = 0; i < matrix1.size(); ++i)
+        {
+            if (matrix1[i].size() != matrix2[i].size())
+            {
+                std::unique_ptr<Expression> imp = std::make_unique<Impossible>();
+                return imp.get();
+            }
+            std::vector<Expression*> newVec;
+            for (size_t j = 0; j < matrix1[i].size(); ++j)
+            {
+                auto unique = std::make_unique<Addition>(matrix1[i][j], matrix2[i][j]);
+                newVec.push_back(unique.get());
+            }
+            newMatrix.push_back(newVec);
+        }
+        return new Matrix(newMatrix)->eval(env);
+    }
+    auto num1 = dynamic_cast<Number*>(exp1);
+    auto num2 = dynamic_cast<Number*>(exp2);
+    if (num1 == nullptr || num2 == nullptr)
+    {
+        return nullptr;
+    }
+    double result = num1->getNumber() + num2->getNumber();
+    return new Number(result);
 }
 std::string Addition::toString() const noexcept
 {
@@ -662,7 +740,20 @@ void Print::destroy() noexcept {}
 
 Expression* Assigment::eval(Environment& env) const
 {
-    return new Unit();
+    auto leftName = dynamic_cast<Name*>(leftExpression);
+    auto leftVar = dynamic_cast<Variable*>(leftExpression);
+    auto exp = rightExpression->eval(env);
+    if (leftName != nullptr)
+    {
+        env.push_front(std::make_pair(leftName->getName(),exp));
+        return new Unit();
+    }
+    else if (leftVar != nullptr)
+    {
+        env.push_front(std::make_pair(std::string{leftVar->getVariable()},exp));
+        return new Unit();
+    }
+    return nullptr;
 }
 std::string Assigment::toString() const noexcept
 {
