@@ -71,6 +71,14 @@ public:
     std::string toString() const noexcept;
 };
 
+class Invalid : public Unit
+{
+public:
+    Invalid();
+    Expression* eval(Environment& env) const override;
+    std::string toString() const noexcept;
+};
+
 class Number : public Value
 {
 protected:

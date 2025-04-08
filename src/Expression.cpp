@@ -63,6 +63,17 @@ std::string Impossible::toString() const noexcept
     return value;
 }
 
+//Impossible
+Invalid::Invalid() {}
+Expression* Invalid::eval(Environment& env) const
+{
+    return new Invalid();
+}
+std::string Invalid::toString() const noexcept
+{
+    return "INVALID OPERATION";
+}
+
 // Number
 Number::Number(double _number) : Value(DataType::Number), number{_number} {}
 Expression* Number::eval(Environment& env) const
@@ -107,6 +118,7 @@ std::string EULER::toString() const noexcept
 Variable::Variable(char _variable) : Value(DataType::Variable), variable{_variable} {}
 Expression* Variable::eval(Environment& env) const
 {
+    
     if (!env.empty())
     {
         for (auto pair : env)
@@ -122,8 +134,8 @@ Expression* Variable::eval(Environment& env) const
             }
         }
     }
-    return const_cast<Variable*>(this);
-    //return new Variable(variable);
+    //return const_cast<Variable*>(this);
+    return new Variable(variable);
 }
 std::string Variable::toString() const noexcept
 {
@@ -155,7 +167,8 @@ Expression* Name::eval(Environment& env) const
             }
         }
     }
-    return const_cast<Name*>(this);
+    //return const_cast<Name*>(this);
+    return new Name(name);
 }
 std::string Name::toString() const noexcept
 {
@@ -205,7 +218,7 @@ Expression* Addition::eval(Environment& env) const
             {
                 delete current_vec_mat1;
                 delete current_vec_mat2;
-                return nullptr;
+                return new Invalid();
             }
 
             if (current_vec_mat1->size() != current_vec_mat2->size())
@@ -236,7 +249,7 @@ Expression* Addition::eval(Environment& env) const
 
     if (num1 == nullptr || num2 == nullptr)
     {
-        return nullptr;
+        return new Invalid();
     }
 
     double resultValue = num1->getNumber() + num2->getNumber();
@@ -287,7 +300,7 @@ Expression* Substraction::eval(Environment& env) const
             {
                 delete current_vec_mat1;
                 delete current_vec_mat2;
-                return nullptr;
+                return new Invalid();
             }
 
             if (current_vec_mat1->size() != current_vec_mat2->size())
@@ -318,7 +331,7 @@ Expression* Substraction::eval(Environment& env) const
 
     if (num1 == nullptr || num2 == nullptr)
     {
-        return nullptr;
+        return new Invalid();
     }
 
     double resultValue = num1->getNumber() - num2->getNumber();
@@ -353,7 +366,7 @@ Expression* Multiplication::eval(Environment& env) const
         auto first_row_mat1 = dynamic_cast<Vector*>(matrix1[0]);
         if (first_row_mat1 == nullptr)
         {
-            return nullptr;
+            return new Invalid();
         }
         if (first_row_mat1->size() != matrix2.size())
         {
@@ -367,12 +380,12 @@ Expression* Multiplication::eval(Environment& env) const
             auto first_row_mat2 = dynamic_cast<Vector*>(matrix2[0]);
             if (first_row_mat2 == nullptr)
             {
-                return nullptr;
+                return new Invalid();
             }
             auto n_row_matrix1 = dynamic_cast<Vector*>(matrix1[i]);
             if (n_row_matrix1 == nullptr)
             {
-                return nullptr;
+                return new Invalid();
             }
             for (size_t j = 0; j < first_row_mat2->size(); ++j)
             {
@@ -382,7 +395,7 @@ Expression* Multiplication::eval(Environment& env) const
                     auto k_row_matrix2 = dynamic_cast<Vector*>(matrix2[k]);
                     if (k_row_matrix2 == nullptr)
                     {
-                        return nullptr;
+                        return new Invalid();
                     }
                     std::unique_ptr<Vector> temp1(new Vector(newVec));
                     std::unique_ptr<Vector> temp2(new Vector(newVec));
@@ -406,7 +419,7 @@ Expression* Multiplication::eval(Environment& env) const
             auto v = dynamic_cast<Vector*>(vec);
             if (v == nullptr)
             {
-                return nullptr;
+                return new Invalid();
             }
             std::vector<Expression*> new_vec{};
             for (Expression* exp : v->getVectorExpression())
@@ -424,7 +437,7 @@ Expression* Multiplication::eval(Environment& env) const
     auto num2 = dynamic_cast<Number*>(exp2.get());
     if (num1 == nullptr || num2 == nullptr)
     {
-        return nullptr;
+        return new Invalid();
     }
     double result = num1->getNumber() * num2->getNumber();
     return new Number(result);
@@ -592,17 +605,18 @@ std::string PairSecond::toString() const noexcept
 Vector::Vector(std::vector<Expression*> _vectorExpression) : Value(DataType::Vector), vectorExpression(_vectorExpression) {}
 Expression* Vector::eval(Environment& env) const
 {
+    //return new Invalid();
     std::vector<Expression*> new_vector;
     for (auto exp : vectorExpression)
     {
         auto element = exp->eval(env);
         if (element == nullptr)
         {
-            for (auto& ptr : new_vector)
+            /*for (auto& ptr : new_vector)
             {
                 delete ptr;
-            }
-            return nullptr;
+            }*/
+            return new Invalid();
         }
         new_vector.push_back(element);
     }
@@ -641,8 +655,8 @@ void Vector::destroy() noexcept
 Matrix::Matrix(std::vector<Expression*> _matrixExpression) : Value(DataType::Matrix), matrixExpression(_matrixExpression) {}
 Expression* Matrix::eval(Environment& env) const
 {
+    //return new Invalid();
     std::vector<Expression*> new_matrix;
-    std::unique_ptr<Expression> temp, element;
     Vector* first_row = dynamic_cast<Vector*>(matrixExpression[0]);
     if (first_row == nullptr)
     {
@@ -653,7 +667,7 @@ Expression* Matrix::eval(Environment& env) const
         }
         if (first_row == nullptr)
         {
-            return nullptr;
+            return new Invalid();
         }
     }
     size_t row_size = first_row->size();
@@ -670,12 +684,12 @@ Expression* Matrix::eval(Environment& env) const
             }
             if (row == nullptr)
             {
-                return nullptr;
+                return new Invalid();
             }
         }
         if (row->size() != row_size)
         {
-            return nullptr;
+            return new Invalid();
         }
         std::vector<Expression*> new_vector;
         for (Expression* exp : row->getVectorExpression())
@@ -728,7 +742,7 @@ void Matrix::destroy() noexcept
 InverseMatrix::InverseMatrix(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
 Expression* InverseMatrix::eval(Environment& env) const
 {
-    return nullptr;
+    return new Invalid();
 }
 std::string InverseMatrix::toString() const noexcept
 {
@@ -1019,11 +1033,11 @@ Expression* Assigment::eval(Environment& env) const
     Variable* leftVar = dynamic_cast<Variable*>(leftExpression);
     if (leftVar != nullptr)
     {
-        env.push_front(std::make_pair(std::string(1, leftVar->getVariable()), exp));
+        env.push_front(std::make_pair(std::string{leftVar->getVariable()}, exp));
         return new Unit();
     }
 
-    return nullptr;
+    return new Invalid();
 }
 std::string Assigment::toString() const noexcept
 {
@@ -1034,14 +1048,15 @@ std::string Assigment::toString() const noexcept
 ExpressionList::ExpressionList() : expressions{}, sz{0} {}
 Expression* ExpressionList::eval(Environment& env) const
 {
-    std::unique_ptr<ExpressionList> exp_list(new ExpressionList());
+    //std::unique_ptr<ExpressionList> exp_list(new ExpressionList());
+    ExpressionList* exp_list = new ExpressionList();
 
     for (auto &exp : expressions)
     {
         exp_list->addExpressionBack(exp->eval(env));
     }
 
-    return exp_list.release();
+    return exp_list/*.release()*/;
 }
 std::string ExpressionList::toString() const noexcept
 {

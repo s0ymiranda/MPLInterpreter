@@ -42,9 +42,16 @@ int main(int argc, char* argv[])
         exs->destroy();
         for (auto& t : env)
         {
-            t.second->destroy();
-            delete t.second;
-            t.second = nullptr;
+            if (t.second != nullptr)
+            {
+                t.second->destroy();
+                delete t.second;
+                t.second = nullptr;
+            }
+            else
+            {
+                std::cout << "NULLPTR\n";
+            }
         }
     }
     else
