@@ -263,6 +263,10 @@ public:
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     std::vector<Expression*> getVectorExpression() const;
+    size_t size()
+    {
+        return vectorExpression.size();
+    }
     void destroy() noexcept override;
 };
 
