@@ -279,6 +279,10 @@ public:
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     std::vector<Expression*> getMatrixExpression() const;
+    size_t size()
+    {
+        return matrixExpression.size();
+    }
     void destroy() noexcept override;
 };
 

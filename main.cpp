@@ -36,22 +36,58 @@ int main(int argc, char* argv[])
         auto env = Environment();
         auto exs = dynamic_cast<ExpressionList*>(parser_result);
         printf("List size: %lu\n", exs->size());
-
-        // auto t = new Number(2);
-        // auto t2 = new Number(5);
-
-        // std::cout << t->eval(env)->toString() << std::endl;
-        // std::cout << t2->eval(env)->toString() << std::endl;
-
-        // auto add = new Addition(t, t2);
-        // std::cout << add->eval(env)->toString() << std::endl;
-        //exs->eval(env);
-        auto test = exs->eval(env);
+        std::unique_ptr<Expression> test(exs->eval(env));
         printf("%s", test->toString().c_str());
-        //printf("%s", exs->eval(env)->toString().c_str());
+        // for (auto &t : env)
+        // {
+        //     if (t.second != nullptr)
+        //     {
+        //         std::cout << t.second->toString() << std::endl;
+        //     }
+        //     // if (t.first == "vec1" || t.first == "vec2")
+        //     //     std::cout << t.second->toString() << std::endl;
+        // }
+
+
+        // auto it = env.begin();
+        // std::cout << (*it).first <<": "<< (*it).second->toString() << std::endl;
+        // ++it;
+        // std::cout << (*it).first <<": " << (dynamic_cast<Vector*>((*it).second))->toString() << std::endl;
+        // ++it;
+        // std::cout << (*it).first <<": " <<(*it).second->toString() << std::endl;
+        // ++it;
+        // std::cout << (*it).first <<": " <<(*it).second->toString() << std::endl;
+        // ++it;
+        // std::cout << (*it).first <<": " <<(*it).second->toString() << std::endl;
+
         test->destroy();
         exs->destroy();
-        parser_result->destroy();
+        for (auto& t : env)
+        {
+            t.second->destroy();
+            delete t.second;
+            t.second = nullptr;
+        }
+
+
+        // std::vector<Expression*> vt1;
+        // vt1.push_back(new Addition(new Number(2), new Number(3)));
+        // vt1.push_back(new Number(4));
+
+        // std::vector<Expression*> vt2;
+        // vt2.push_back(new Number(6));
+        // vt2.push_back(new Number(8));
+        // auto v1 = new Vector(vt1);
+        // auto v2 = new Vector(vt2);
+
+        // std::vector<Expression*> vt3;
+        // vt3.push_back(v1);
+        // vt3.push_back(v2);
+        // auto m = new Matrix(vt3);
+
+        // auto m2 = m->eval(env);
+
+        // std::cout << m2->toString() << std::endl;
     }
     else
     {
