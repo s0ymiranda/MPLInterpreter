@@ -144,13 +144,14 @@ Expression* Name::eval(Environment& env) const
         {
             if (pair.first == name)
             {
-                std::unique_ptr<Expression> exp(pair.second->eval(env));
-                auto num = dynamic_cast<Number*>(exp.get());
+                //std::unique_ptr<Expression> exp(pair.second->eval(env));
+                Expression* exp = pair.second->eval(env);
+                auto num = dynamic_cast<Number*>(exp);
                 if (num != nullptr)
                 {
                     return num;
                 }
-                return exp.release();
+                return exp;
             }
         }
     }
@@ -1005,19 +1006,20 @@ void Print::destroy() noexcept {}
 
 Expression* Assigment::eval(Environment& env) const
 {
-    std::unique_ptr<Expression> exp(rightExpression->eval(env));
+    //std::unique_ptr<Expression> exp(rightExpression->eval(env));
+    Expression* exp = rightExpression->eval(env);
 
     Name* leftName = dynamic_cast<Name*>(leftExpression);
     if (leftName != nullptr)
     {
-        env.push_front(std::make_pair(leftName->getName(), exp.release()));
+        env.push_front(std::make_pair(leftName->getName(), exp));
         return new Unit();
     }
 
     Variable* leftVar = dynamic_cast<Variable*>(leftExpression);
     if (leftVar != nullptr)
     {
-        env.push_front(std::make_pair(std::string(1, leftVar->getVariable()), exp.release()));
+        env.push_front(std::make_pair(std::string(1, leftVar->getVariable()), exp));
         return new Unit();
     }
 
