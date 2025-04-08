@@ -144,12 +144,13 @@ Expression* Name::eval(Environment& env) const
         {
             if (pair.first == name)
             {
-                auto num = dynamic_cast<Number*>(pair.second->eval(env));
+                std::unique_ptr<Expression> exp(pair.second->eval(env));
+                auto num = dynamic_cast<Number*>(exp.get());
                 if (num != nullptr)
                 {
                     return num;
                 }
-                return pair.second->eval(env);
+                return exp.release();
             }
         }
     }
@@ -596,6 +597,10 @@ Expression* Vector::eval(Environment& env) const
         auto element = exp->eval(env);
         if (element == nullptr)
         {
+            for (auto& ptr : new_vector)
+            {
+                delete ptr;
+            }
             return nullptr;
         }
         new_vector.push_back(element);
@@ -619,7 +624,7 @@ std::vector<Expression*> Vector::getVectorExpression() const
 }
 void Vector::destroy() noexcept
 {
-    for (auto exp : vectorExpression)
+    for (auto& exp : vectorExpression)
     {
         if (exp != nullptr)
         {
@@ -636,7 +641,7 @@ Matrix::Matrix(std::vector<Expression*> _matrixExpression) : Value(DataType::Mat
 Expression* Matrix::eval(Environment& env) const
 {
     std::vector<Expression*> new_matrix;
-    // std::unique_ptr<Vector> first_row();
+    std::unique_ptr<Expression> temp, element;
     Vector* first_row = dynamic_cast<Vector*>(matrixExpression[0]);
     if (first_row == nullptr)
     {
@@ -659,7 +664,8 @@ Expression* Matrix::eval(Environment& env) const
             auto is_id = dynamic_cast<Name*>(vec);
             if (is_id)
             {
-                row = dynamic_cast<Vector*>(is_id->eval(env));
+                auto temp = is_id->eval(env);
+                row = dynamic_cast<Vector*>(temp);
             }
             if (row == nullptr)
             {
@@ -684,8 +690,7 @@ Expression* Matrix::eval(Environment& env) const
                 new_vector.push_back(num);
             }
         }
-        std::unique_ptr<Vector> temp(new Vector(new_vector));
-        new_matrix.push_back(temp.release());
+        new_matrix.push_back(new Vector(new_vector));
     }
     return new Matrix(new_matrix);
 }
@@ -1041,7 +1046,7 @@ std::string ExpressionList::toString() const noexcept
     std::string result;
     for (const auto& expr : expressions)
     {
-        result += expr->toString() + "\n";
+        result += (dynamic_cast<Unit*>(expr)) ? "" : expr->toString() + "\n";
     }
     return result;
 }
