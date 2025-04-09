@@ -250,43 +250,46 @@ std::string Addition::toString() const noexcept
 
 //Subtraction
 Expression* Substraction::eval(Environment& env) const
-{Expression* exp1 = leftExpression->eval(env);
+{
+    Expression* exp1 = leftExpression->eval(env);
     Expression* exp2 = rightExpression->eval(env);
 
     Value* element1 = dynamic_cast<Value*>(exp1);
     Value* element2 = dynamic_cast<Value*>(exp2);
 
-    if (element1 == nullptr || element2 == nullptr) {
+    if (element1 == nullptr || element2 == nullptr)
+    {
         return new Substraction(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable) {
+    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    {
         return new Substraction(exp1, exp2);
     }
 
     if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix) {
-        auto matrix1 = dynamic_cast<Matrix*>(element1)->getMatrixExpression();
-        auto matrix2 = dynamic_cast<Matrix*>(element2)->getMatrixExpression();
+        auto matrix1 = (dynamic_cast<Matrix*>(element1))->getMatrixExpression();
+        auto matrix2 = (dynamic_cast<Matrix*>(element2))->getMatrixExpression();
 
-        if (matrix1.size() != matrix2.size()) {
+        if (matrix1.size() != matrix2.size())
+        {
+            exp1->destroy();
             delete exp1;
+            exp2->destroy();
             delete exp2;
             return new Impossible();
         }
 
         std::vector<Expression*> newMatrix;
-        for (size_t i = 0; i < matrix1.size(); ++i) {
+        for (size_t i = 0; i < matrix1.size(); ++i)
+        {
             auto current_vec_mat1 = dynamic_cast<Vector*>(matrix1[i]);
             auto current_vec_mat2 = dynamic_cast<Vector*>(matrix2[i]);
-
-            if (!current_vec_mat1 || !current_vec_mat2) {
+            if (current_vec_mat1->size() != current_vec_mat2->size())
+            {
+                exp1->destroy();
                 delete exp1;
-                delete exp2;
-                return new Invalid();
-            }
-
-            if (current_vec_mat1->size() != current_vec_mat2->size()) {
-                delete exp1;
+                exp2->destroy();
                 delete exp2;
                 return new Impossible();
             }
@@ -302,24 +305,26 @@ Expression* Substraction::eval(Environment& env) const
             newMatrix.push_back(new Vector(newVec));
         }
 
-        delete exp1;
-        delete exp2;
-        return new Matrix(newMatrix);
+        return (new Matrix(newMatrix))->eval(env);
     }
 
     auto num1 = dynamic_cast<Number*>(exp1);
     auto num2 = dynamic_cast<Number*>(exp2);
 
     if (num1 == nullptr || num2 == nullptr) {
+        exp1->destroy();
         delete exp1;
+        exp2->destroy();
         delete exp2;
         return new Invalid();
     }
 
     double resultValue = num1->getNumber() - num2->getNumber();
+    exp1->destroy();
     delete exp1;
+    exp2->destroy();
     delete exp2;
-    return new Number(resultValue);
+    return (new Number(resultValue))->eval(env);
 }
 std::string Substraction::toString() const noexcept
 {
@@ -445,8 +450,10 @@ Expression* Division::eval(Environment& env) const
 
     if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix)
     {
-        //TODO
-        return new Unit();
+        auto matrix1 = dynamic_cast<Matrix*>(element1);
+        auto matrix2 = dynamic_cast<Matrix*>(element2);
+
+        return (new Multiplication(matrix1, new InverseMatrix(matrix2)))->eval(env);
     }
 
     if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Number)
@@ -811,9 +818,134 @@ void Matrix::destroy() noexcept
 
 // Inverse Matrix
 InverseMatrix::InverseMatrix(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
+Expression* InverseMatrix::gauss(std::vector<std::vector<Expression*>> matrixExpression) const
+{
+    size_t size = matrixExpression.size();
+
+    double matrix[size][size * 2];
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        for (size_t j = 0; j < size; ++j)
+        {
+            matrix[i][j] = dynamic_cast<Number*>(matrixExpression[i][j])->getNumber();
+        }
+    }
+
+    for (size_t i = size, k = 0; i < size * 2; ++i ,++k)
+    {
+        for (size_t j = size; j < size * 2; ++j)
+        {
+            if (i == j)
+            {
+                matrix[k][j] = 1.0;
+            }
+            else
+            {
+                matrix[k][j] = 0.0;
+            }
+        }
+    }
+
+    for (size_t i = 0; i < size - 1; ++i)
+    {
+        size_t primaryIndexPivot = i;
+        for (size_t j = i + 1; j < size; ++j)
+        {
+            if (std::abs(matrix[primaryIndexPivot][i]) < std::abs(matrix[j][i]))
+            {
+                primaryIndexPivot = j;
+            }
+        }
+        if (primaryIndexPivot != i)
+        {
+            for (size_t j = 0; j < size * 2; ++j)
+            {
+                std::swap(matrix[i][j], matrix[primaryIndexPivot][j]);
+            }
+        }
+
+        if (matrix[i][i] == 0) // Singular Matrix Found
+        {
+            return new Impossible();
+        }
+
+        for (int jRow = i + 1; jRow < size; ++jRow)
+        {
+            if (matrix[jRow][i] != 0)
+            {
+                double result = matrix[jRow][i] / matrix[i][i];
+                for (int jColumn = i + 1; jColumn < size * 2; ++jColumn)
+                {
+                    double temp = matrix[jRow][jColumn];
+                    matrix[jRow][jColumn] -= result * matrix[i][jColumn];
+                    if (std::abs(matrix[jRow][jColumn]) < std::numeric_limits<double>::epsilon() * temp)
+                    {
+                        matrix[jRow][jColumn] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    if (matrix[size - 1][size - 1] == 0) // Singular Matrix Found
+    {
+        return new Impossible();
+    }
+
+    for (size_t m = size; m < size * 2; ++m)
+    {
+        matrix[size - 1][m] /= matrix[size - 1][size - 1];
+        for (int newIdx = size - 2; newIdx >= 0; --newIdx)
+        {
+            double temp = matrix[newIdx][m];
+            for (int k = newIdx + 1; k < size; ++k)
+            {
+                temp -= matrix[newIdx][k] * matrix[k][m];
+            }
+            matrix[newIdx][m] = temp / matrix[newIdx][newIdx];
+        }
+    }
+
+    //std::vector<std::vector<Expression*>> newMatrix;
+    std::vector<Expression*> newMatrix;
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        std::vector<Expression*> newVector;
+        for (size_t j = size; j < size * 2; ++j)
+        {
+            newVector.push_back(new Number(matrix[i][j]));
+        }
+        newMatrix.push_back(new Vector(newVector));
+    }
+    return new Matrix(newMatrix);
+}
 Expression* InverseMatrix::eval(Environment& env) const
 {
-    return new Invalid();
+    auto evMatrix = dynamic_cast<Matrix*>(matrix->eval(env));
+    if (evMatrix == nullptr)
+    {
+        return new Invalid();
+    }
+    auto mat = evMatrix->getMatrixExpression();
+    std::vector<std::vector<Expression*>> matrix_to_inverse{};
+    for (auto &vec : mat)
+    {
+        const auto& v = dynamic_cast<Vector*>(vec);
+        std::vector<Expression*> row{};
+        for (auto &exp : v->getVectorExpression())
+        {
+            row.push_back(exp);
+        }
+        matrix_to_inverse.push_back(row);
+    }
+
+    if (matrix_to_inverse.size() != matrix_to_inverse[0].size()) // Validation for Square Matrix
+    {
+        return new Impossible();
+    }
+    return gauss(matrix_to_inverse);
 }
 std::string InverseMatrix::toString() const noexcept
 {

@@ -298,6 +298,7 @@ class InverseMatrix : public Value
 {
 private:
     Expression* matrix;
+    Expression* gauss(std::vector<std::vector<Expression*>>) const;
 public:
     InverseMatrix(Expression* _matrix);
     Expression* eval(Environment& env) const override;
