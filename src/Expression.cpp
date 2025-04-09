@@ -1450,7 +1450,19 @@ void RealEigenvalues::destroy() noexcept
 Determinant::Determinant(Expression* _matrix) : Value(DataType::Number), matrix(_matrix) {}
 Expression* Determinant::eval(Environment& env) const
 {
-    return nullptr;
+    auto matrixPair = new MatrixLU(matrix);
+    auto second = new PairSecond(matrixPair);
+    auto upperMatrix = dynamic_cast<Matrix*>(second->eval(env));
+    auto U = upperMatrix->getMatrixExpression();
+    double det = 1;
+    for (size_t i = 0; i < U.size(); ++i)
+    {
+        auto row = dynamic_cast<Vector*>(U[i]);
+        det *= dynamic_cast<Number*>(row->getVectorExpression()[i])->getNumber();
+    }
+    delete second;
+    delete matrixPair;
+    return new Number(((det < 0) ? -det : det));
 }
 std::string Determinant::toString() const noexcept
 {
