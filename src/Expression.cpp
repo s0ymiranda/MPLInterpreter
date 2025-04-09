@@ -543,7 +543,30 @@ std::string Power::toString() const noexcept
 //NaturalLogarithm
 Expression* NaturalLogarithm::eval(Environment& env) const
 {
-    return new Unit();
+    Expression* exp = expression->eval(env);
+    auto element = dynamic_cast<Value*>(exp);
+    if (element == nullptr)
+    {
+        return new NaturalLogarithm(exp);
+    }
+    if(element->getDataType() == DataType::Variable)
+    {
+        return new NaturalLogarithm(exp);
+    }
+    auto num = dynamic_cast<Number*>(exp);
+    if (num == nullptr)
+    {
+        delete exp;
+        return new Invalid();
+    }
+    if (num->getNumber() <= 0)
+    {
+        delete exp;
+        return new Impossible();
+    }
+    double result = std::log(num->getNumber());
+    delete exp;
+    return new Number(result);
 }
 std::string NaturalLogarithm::toString() const noexcept
 {
@@ -553,7 +576,37 @@ std::string NaturalLogarithm::toString() const noexcept
 //Logarithm
 Expression* Logarithm::eval(Environment& env) const
 {
-    return new Unit();
+    Expression* exp1 = leftExpression->eval(env);
+    Expression* exp2 = rightExpression->eval(env);
+    auto element1 = dynamic_cast<Value*>(exp1);
+    auto element2 = dynamic_cast<Value*>(exp2);
+    if (element1 == nullptr || element2 == nullptr)
+    {
+        return new Logarithm(exp1, exp2);
+    }
+    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    {
+        return new Logarithm(exp1, exp2);
+    }
+    auto num1 = dynamic_cast<Number*>(exp1);
+    auto num2 = dynamic_cast<Number*>(exp2);
+    if (num1 == nullptr || num2 == nullptr)
+    {
+        delete exp1;
+        delete exp2;
+        return new Invalid();
+    }
+    if (num1->getNumber() <= 0 || num2->getNumber() <= 0 || num2->getNumber() == 1)
+    {
+        delete exp1;
+        delete exp2;
+        return new Impossible();
+    }
+
+    double result = std::log(num1->getNumber()) / std::log(num2->getNumber());
+    delete exp1;
+    delete exp2;
+    return new Number(result);
 }
 std::string Logarithm::toString() const noexcept
 {
@@ -563,7 +616,30 @@ std::string Logarithm::toString() const noexcept
 // Square Root
 Expression* SquareRoot::eval(Environment& env) const
 {
-    return new Unit();
+    Expression* exp = expression->eval(env);
+    auto element = dynamic_cast<Value*>(exp);
+    if (element == nullptr)
+    {
+        return new SquareRoot(exp);
+    }
+    if(element->getDataType() == DataType::Variable)
+    {
+        return new SquareRoot(exp);
+    }
+    auto num = dynamic_cast<Number*>(exp);
+    if (num == nullptr)
+    {
+        delete exp;
+        return new Invalid();
+    }
+    if (num->getNumber() < 0)
+    {
+        delete exp;
+        return new Impossible();
+    }
+    double result = std::sqrt(num->getNumber());
+    delete exp;
+    return new Number(result);
 }
 std::string SquareRoot::toString() const noexcept
 {
@@ -573,7 +649,37 @@ std::string SquareRoot::toString() const noexcept
 // Root
 Expression* Root::eval(Environment& env) const
 {
-    return new Unit();
+    Expression* exp1 = leftExpression->eval(env);
+    Expression* exp2 = rightExpression->eval(env);
+    auto element1 = dynamic_cast<Value*>(exp1);
+    auto element2 = dynamic_cast<Value*>(exp2);
+    if (element1 == nullptr || element2 == nullptr)
+    {
+        return new Root(exp1, exp2);
+    }
+    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    {
+        return new Root(exp1, exp2);
+    }
+    auto num1 = dynamic_cast<Number*>(exp1);
+    auto num2 = dynamic_cast<Number*>(exp2);
+    if (num1 == nullptr || num2 == nullptr)
+    {
+        delete exp1;
+        delete exp2;
+        return new Invalid();
+    }
+    if (num1->getNumber() <= 0 || num2->getNumber() <= 0 || num2->getNumber() == 1)
+    {
+        delete exp1;
+        delete exp2;
+        return new Impossible();
+    }
+
+    double result = std::pow(num1->getNumber(), 1.0 / num2->getNumber());
+    delete exp1;
+    delete exp2;
+    return new Number(result);
 }
 std::string Root::toString() const noexcept
 {
@@ -583,7 +689,30 @@ std::string Root::toString() const noexcept
 //Sine
 Expression* Sine::eval(Environment& env) const
 {
-    return new Unit();
+    Expression* exp = expression->eval(env);
+    auto element = dynamic_cast<Value*>(exp);
+    if (element == nullptr)
+    {
+        return new SquareRoot(exp);
+    }
+    if(element->getDataType() == DataType::Variable)
+    {
+        return new SquareRoot(exp);
+    }
+    auto num = dynamic_cast<Number*>(exp);
+    if (num == nullptr)
+    {
+        delete exp;
+        return new Invalid();
+    }
+    if (num->getNumber() < 0)
+    {
+        delete exp;
+        return new Impossible();
+    }
+    double result = std::sin(num->getNumber());
+    delete exp;
+    return new Number(result);
 }
 std::string Sine::toString() const noexcept
 {
@@ -593,7 +722,30 @@ std::string Sine::toString() const noexcept
 //Cosine
 Expression* Cosine::eval(Environment& env) const
 {
-    return new Unit();
+    Expression* exp = expression->eval(env);
+    auto element = dynamic_cast<Value*>(exp);
+    if (element == nullptr)
+    {
+        return new SquareRoot(exp);
+    }
+    if(element->getDataType() == DataType::Variable)
+    {
+        return new SquareRoot(exp);
+    }
+    auto num = dynamic_cast<Number*>(exp);
+    if (num == nullptr)
+    {
+        delete exp;
+        return new Invalid();
+    }
+    if (num->getNumber() < 0)
+    {
+        delete exp;
+        return new Impossible();
+    }
+    double result = std::cos(num->getNumber());
+    delete exp;
+    return new Number(result);
 }
 std::string Cosine::toString() const noexcept
 {
@@ -603,7 +755,30 @@ std::string Cosine::toString() const noexcept
 //Tangent
 Expression* Tangent::eval(Environment& env) const
 {
-    return new Unit();
+    Expression* exp = expression->eval(env);
+    auto element = dynamic_cast<Value*>(exp);
+    if (element == nullptr)
+    {
+        return new SquareRoot(exp);
+    }
+    if(element->getDataType() == DataType::Variable)
+    {
+        return new SquareRoot(exp);
+    }
+    auto num = dynamic_cast<Number*>(exp);
+    if (num == nullptr)
+    {
+        delete exp;
+        return new Invalid();
+    }
+    if (num->getNumber() < 0)
+    {
+        delete exp;
+        return new Impossible();
+    }
+    double result = std::tan(num->getNumber());
+    delete exp;
+    return new Number(result);
 }
 std::string Tangent::toString() const noexcept
 {
@@ -613,7 +788,30 @@ std::string Tangent::toString() const noexcept
 //Cotangent
 Expression* Cotangent::eval(Environment& env) const
 {
-    return nullptr;
+    Expression* exp = expression->eval(env);
+    auto element = dynamic_cast<Value*>(exp);
+    if (element == nullptr)
+    {
+        return new SquareRoot(exp);
+    }
+    if(element->getDataType() == DataType::Variable)
+    {
+        return new SquareRoot(exp);
+    }
+    auto num = dynamic_cast<Number*>(exp);
+    if (num == nullptr)
+    {
+        delete exp;
+        return new Invalid();
+    }
+    if (num->getNumber() < 0)
+    {
+        delete exp;
+        return new Impossible();
+    }
+    double result = 1 / std::tan(num->getNumber());
+    delete exp;
+    return new Number(result);
 }
 std::string Cotangent::toString() const noexcept
 {
@@ -630,7 +828,7 @@ Expression* Pair::eval(Environment& env) const
 }
 std::string Pair::toString() const noexcept
 {
-    return "[" + first->toString() + ", " + second->toString() + "]";
+    return "(" + first->toString() + ", " + second->toString() + ")";
 }
 Expression* Pair::getFirst()
 {
@@ -659,7 +857,15 @@ void Pair::destroy() noexcept
 //PairFirst
 Expression* PairFirst::eval(Environment& env) const
 {
-    return nullptr;
+    Expression* exp = expression->eval(env);
+    auto pair = dynamic_cast<Pair*>(exp);
+    if (pair == nullptr)
+    {
+        delete exp;
+        return new Invalid();
+    }
+    delete exp;
+    return pair->getFirst()->eval(env);
 }
 std::string PairFirst::toString() const noexcept
 {
@@ -669,7 +875,15 @@ std::string PairFirst::toString() const noexcept
 //PairSecond
 Expression* PairSecond::eval(Environment& env) const
 {
-    return nullptr;
+    Expression* exp = expression->eval(env);
+    auto pair = dynamic_cast<Pair*>(exp);
+    if (pair == nullptr)
+    {
+        delete exp;
+        return new Invalid();
+    }
+    delete exp;
+    return pair->getSecond()->eval(env);
 }
 std::string PairSecond::toString() const noexcept
 {
@@ -1043,7 +1257,16 @@ void Determinant::destroy() noexcept
 //Function
 Expression* Function::eval(Environment& env) const
 {
-    return nullptr;
+    Expression* exp = dynamic_cast<Value*>(expression->eval(env));
+    if (exp != nullptr)
+    {
+        return exp;
+    }
+    else
+    {
+        delete exp;
+        return expression;
+    }
 }
 std::string Function::toString() const noexcept
 {
@@ -1188,7 +1411,7 @@ Display::Display(Expression* _expression) : expression(_expression) {}
 Expression* Display::eval(Environment& env) const
 {
     Expression* exp = expression->eval(env);
-    std::cout << exp->toString();
+    std::cout << exp->toString() << std::endl;
     exp->destroy();
     delete exp;
     return new Unit();
