@@ -942,6 +942,24 @@ void Vector::destroy() noexcept
 
 //Matrix
 Matrix::Matrix(std::vector<Expression*>& _matrixExpression) : Value(DataType::Matrix), matrixExpression(_matrixExpression) {}
+
+// std::vector<std::vector<Expression*>> Matrix::getVectorVector(Matrix* matrix)
+// {
+//     std::vector<std::vector<Expression*>> matrix_to_return{};
+//     auto mat = matrix->getMatrixExpression();
+//     for (auto &vec : mat)
+//     {
+//         const auto& v = dynamic_cast<Vector*>(vec);
+//         std::vector<Expression*> row{};
+//         for (auto &exp : v->getVectorExpression())
+//         {
+//             row.push_back(exp);
+//         }
+//         matrix_to_return.push_back(row);
+//     }
+//     return matrix_to_return;
+// }
+
 Expression* Matrix::eval(Environment& env) const
 {
     std::vector<Expression*> new_matrix;
@@ -1179,7 +1197,7 @@ void InverseMatrix::destroy() noexcept
 // LU Matrix
 MatrixLU::MatrixLU(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
 
-Pair* MatrixLU::lowerUpperDecomposition(std::vector<std::vector<Expression*>> matrixExpression) const
+Expression* MatrixLU::lowerUpperDecomposition(std::vector<std::vector<Expression*>> matrixExpression) const
 {
     size_t size = matrixExpression.size();
 
@@ -1289,9 +1307,110 @@ void MatrixLU::destroy() noexcept
 }
 
 TridiagonalMatrix::TridiagonalMatrix(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
+
+Expression* TridiagonalMatrix::tridiagonal(std::vector<std::vector<Expression*>> matrix) const
+{
+    size_t size = matrix.size();
+    std::vector<std::vector<double>> answerMatrix(size, std::vector<double>(size)), temporalMatrix(size, std::vector<double>(size));
+    for (size_t i = 0; i < size; ++i)
+    {
+        for (size_t j = 0; j < size; ++j)
+        {
+            answerMatrix[i][j] = dynamic_cast<Number*>(matrix[i][j])->getNumber();
+        }
+    }
+
+    std::vector<double> auxiliaryVector(size);
+    for (int idx = 0; idx < size - 2; ++idx)
+    {
+        double sum = 0;
+        for (int i = 0; i < size; ++i)
+        {
+            auxiliaryVector[i] = 0;
+            if (i > idx + 1) auxiliaryVector[i] = answerMatrix[i][idx];
+            if (i > idx) sum += answerMatrix[i][idx] * answerMatrix[i][idx];
+        }
+        double sign = 1;
+        if (answerMatrix[idx + 1][idx] < 0) sign = -1;
+        double squareRoot = sqrt(sum);
+        double h = sum + std::abs(answerMatrix[idx + 1][idx]) * squareRoot;
+        auxiliaryVector[idx + 1] = answerMatrix[idx + 1][idx] + squareRoot * sign;
+        double quotient = 0;
+        for (int i = 0; i < size; ++i)
+        {
+            for (int j = 0; j < size; ++j)
+            {
+                quotient += auxiliaryVector[i] * answerMatrix[i][j] * auxiliaryVector[j];
+                if ((i <= idx) && (j <= idx))
+                {
+                    temporalMatrix[i][j] = answerMatrix[i][j];
+                    continue;
+                }
+                if ((j == idx) && (i >= idx + 2))
+                {
+                    temporalMatrix[i][j] = 0;
+                    continue;
+                }
+                double middleValue = 0;
+                for (int k = 0; k < size; ++k)
+                {
+                    middleValue -= (auxiliaryVector[i] * answerMatrix[k][j] + answerMatrix[i][k] * auxiliaryVector[j]) * auxiliaryVector[k];
+                }
+                temporalMatrix[i][j] = answerMatrix[i][j] + middleValue / h;
+            }
+        }
+        quotient /= h * h;
+        for (int i = 0; i < size; ++i)
+        {
+            for (int j = 0; j < size; ++j)
+            {
+                answerMatrix[i][j] = temporalMatrix[i][j] + quotient * auxiliaryVector[i] * auxiliaryVector[j];
+                if (std::abs(answerMatrix[i][j]) < 0.000001)
+                {
+                    answerMatrix[i][j] = 0;
+                }
+            }
+        }
+    }
+
+    std::vector<Expression*> newMatrix;
+    for (size_t i = 0; i < size; ++i)
+    {
+        std::vector<Expression*> newVector;
+        for (size_t j = 0; j < size; ++j)
+        {
+            newVector.push_back(new Number(answerMatrix[i][j]));
+        }
+        newMatrix.push_back(new Vector(newVector));
+    }
+    return new Matrix(newMatrix);
+}
+
 Expression* TridiagonalMatrix::eval(Environment& env) const
 {
-    return nullptr;
+    auto evMatrix = dynamic_cast<Matrix*>(matrix->eval(env));
+    if (evMatrix == nullptr)
+    {
+        return new Invalid();
+    }
+    auto mat = evMatrix->getMatrixExpression();
+    std::vector<std::vector<Expression*>> matrix_to_tridiagonal{};
+    for (auto &vec : mat)
+    {
+        const auto& v = dynamic_cast<Vector*>(vec);
+        std::vector<Expression*> row{};
+        for (auto &exp : v->getVectorExpression())
+        {
+            row.push_back(exp);
+        }
+        matrix_to_tridiagonal.push_back(row);
+    }
+
+    if (matrix_to_tridiagonal.size() != matrix_to_tridiagonal[0].size()) // Validation for Square Matrix
+    {
+        return new Impossible();
+    }
+    return tridiagonal(matrix_to_tridiagonal);
 }
 std::string TridiagonalMatrix::toString() const noexcept
 {
@@ -1530,7 +1649,7 @@ void Display::destroy() noexcept
 Print::Print(std::string _message) : message(_message) {}
 Expression* Print::eval(Environment&) const
 {
-    std::cout << message;
+    std::cout << message << std::endl;
     return new Unit();
 }
 std::string Print::toString() const noexcept

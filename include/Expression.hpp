@@ -282,6 +282,7 @@ class Matrix : public Value
 {
 protected:
     std::vector<Expression*> matrixExpression;
+    // std::vector<std::vector<Expression*>> getVectorVector(Matrix*);
 public:
     Matrix(std::vector<Expression*>& _matrixExpression);
     Expression* eval(Environment& env) const override;
@@ -310,7 +311,7 @@ class MatrixLU : public Value
 {
 private:
     Expression* matrix;
-    Pair* lowerUpperDecomposition(std::vector<std::vector<Expression*>> matrixExpression) const;
+    Expression* lowerUpperDecomposition(std::vector<std::vector<Expression*>> matrixExpression) const;
 public:
     MatrixLU(Expression* _matrix);
     Expression* eval(Environment& env) const override;
@@ -322,6 +323,7 @@ class TridiagonalMatrix : public Value
 {
 private:
     Expression* matrix;
+    Expression* tridiagonal(std::vector<std::vector<Expression*>> matrix) const;
 public:
     TridiagonalMatrix(Expression* _matrix);
     Expression* eval(Environment& env) const override;
