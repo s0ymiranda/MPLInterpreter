@@ -14,6 +14,17 @@ std::string Unit::toString() const noexcept
 }
 void Unit::destroy() noexcept {}
 
+//Invalid
+Invalid::Invalid() {}
+Expression* Invalid::eval(Environment& env) const
+{
+    return new Invalid();
+}
+std::string Invalid::toString() const noexcept
+{
+    return "INVALID OPERATION";
+}
+
 // Value
 Value::Value(DataType _dataType) : dataType{_dataType} {}
 DataType Value::getDataType() const
@@ -63,17 +74,6 @@ std::string Impossible::toString() const noexcept
     return value;
 }
 
-//Impossible
-Invalid::Invalid() {}
-Expression* Invalid::eval(Environment& env) const
-{
-    return new Invalid();
-}
-std::string Invalid::toString() const noexcept
-{
-    return "INVALID OPERATION";
-}
-
 // Number
 Number::Number(double _number) : Value(DataType::Number), number{_number} {}
 Expression* Number::eval(Environment& env) const
@@ -118,23 +118,16 @@ std::string EULER::toString() const noexcept
 Variable::Variable(char _variable) : Value(DataType::Variable), variable{_variable} {}
 Expression* Variable::eval(Environment& env) const
 {
-    
     if (!env.empty())
     {
         for (auto pair : env)
         {
             if (pair.first == std::string{variable})
             {
-                auto num = dynamic_cast<Number*>(pair.second->eval(env));
-                if (num != nullptr)
-                {
-                    return num;
-                }
                 return pair.second->eval(env);
             }
         }
     }
-    //return const_cast<Variable*>(this);
     return new Variable(variable);
 }
 std::string Variable::toString() const noexcept
@@ -156,18 +149,10 @@ Expression* Name::eval(Environment& env) const
         {
             if (pair.first == name)
             {
-                //std::unique_ptr<Expression> exp(pair.second->eval(env));
-                Expression* exp = pair.second->eval(env);
-                auto num = dynamic_cast<Number*>(exp);
-                if (num != nullptr)
-                {
-                    return num;
-                }
-                return exp;
+                return pair.second->eval(env);
             }
         }
     }
-    //return const_cast<Name*>(this);
     return new Name(name);
 }
 std::string Name::toString() const noexcept
@@ -182,29 +167,32 @@ std::string Name::getName() const noexcept
 // Addition
 Expression* Addition::eval(Environment& env) const
 {
-    std::unique_ptr<Expression> exp1(leftExpression->eval(env));
-    std::unique_ptr<Expression> exp2(rightExpression->eval(env));
+    Expression* exp1 = leftExpression->eval(env);
+    Expression* exp2 = rightExpression->eval(env);
 
-    Value* element1 = dynamic_cast<Value*>(exp1.get());
-    Value* element2 = dynamic_cast<Value*>(exp2.get());
+    Value* element1 = dynamic_cast<Value*>(exp1);
+    Value* element2 = dynamic_cast<Value*>(exp2);
 
     if (element1 == nullptr || element2 == nullptr)
     {
-        return new Addition(exp1.release(), exp2.release());
+        return new Addition(exp1, exp2);
     }
 
     if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
     {
-        return new Addition(exp1.release(), exp2.release());
+        return new Addition(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix)
-    {
-        auto matrix1 = dynamic_cast<Matrix*>(element1)->getMatrixExpression();
-        auto matrix2 = dynamic_cast<Matrix*>(element2)->getMatrixExpression();
+    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix) {
+        auto matrix1 = (dynamic_cast<Matrix*>(element1))->getMatrixExpression();
+        auto matrix2 = (dynamic_cast<Matrix*>(element2))->getMatrixExpression();
 
         if (matrix1.size() != matrix2.size())
         {
+            exp1->destroy();
+            delete exp1;
+            exp2->destroy();
+            delete exp2;
             return new Impossible();
         }
 
@@ -213,18 +201,12 @@ Expression* Addition::eval(Environment& env) const
         {
             auto current_vec_mat1 = dynamic_cast<Vector*>(matrix1[i]);
             auto current_vec_mat2 = dynamic_cast<Vector*>(matrix2[i]);
-
-            if (!current_vec_mat1 || !current_vec_mat2)
-            {
-                delete current_vec_mat1;
-                delete current_vec_mat2;
-                return new Invalid();
-            }
-
             if (current_vec_mat1->size() != current_vec_mat2->size())
             {
-                delete current_vec_mat1;
-                delete current_vec_mat2;
+                exp1->destroy();
+                delete exp1;
+                exp2->destroy();
+                delete exp2;
                 return new Impossible();
             }
 
@@ -232,28 +214,33 @@ Expression* Addition::eval(Environment& env) const
             auto row1 = current_vec_mat1->getVectorExpression();
             auto row2 = current_vec_mat2->getVectorExpression();
 
-            for (size_t j = 0; j < current_vec_mat1->size(); ++j)
-            {
+            for (size_t j = 0; j < current_vec_mat1->size(); ++j) {
                 newVec.push_back(new Addition(row1[j], row2[j]));
             }
 
             newMatrix.push_back(new Vector(newVec));
         }
 
-        auto result = new Matrix(newMatrix);
-        return result->eval(env);
+        return (new Matrix(newMatrix))->eval(env);
     }
 
-    auto num1 = dynamic_cast<Number*>(exp1.get());
-    auto num2 = dynamic_cast<Number*>(exp2.get());
+    auto num1 = dynamic_cast<Number*>(exp1);
+    auto num2 = dynamic_cast<Number*>(exp2);
 
-    if (num1 == nullptr || num2 == nullptr)
-    {
+    if (num1 == nullptr || num2 == nullptr) {
+        exp1->destroy();
+        delete exp1;
+        exp2->destroy();
+        delete exp2;
         return new Invalid();
     }
 
     double resultValue = num1->getNumber() + num2->getNumber();
-    return new Number(resultValue);
+    exp1->destroy();
+    delete exp1;
+    exp2->destroy();
+    delete exp2;
+    return (new Number(resultValue))->eval(env);
 }
 
 std::string Addition::toString() const noexcept
@@ -263,50 +250,44 @@ std::string Addition::toString() const noexcept
 
 //Subtraction
 Expression* Substraction::eval(Environment& env) const
-{
-    std::unique_ptr<Expression> exp1(leftExpression->eval(env));
-    std::unique_ptr<Expression> exp2(rightExpression->eval(env));
+{Expression* exp1 = leftExpression->eval(env);
+    Expression* exp2 = rightExpression->eval(env);
 
-    Value* element1 = dynamic_cast<Value*>(exp1.get());
-    Value* element2 = dynamic_cast<Value*>(exp2.get());
+    Value* element1 = dynamic_cast<Value*>(exp1);
+    Value* element2 = dynamic_cast<Value*>(exp2);
 
-    if (element1 == nullptr || element2 == nullptr)
-    {
-        return new Substraction(exp1.release(), exp2.release());
+    if (element1 == nullptr || element2 == nullptr) {
+        return new Substraction(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
-    {
-        return new Substraction(exp1.release(), exp2.release());
+    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable) {
+        return new Substraction(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix)
-    {
+    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix) {
         auto matrix1 = dynamic_cast<Matrix*>(element1)->getMatrixExpression();
         auto matrix2 = dynamic_cast<Matrix*>(element2)->getMatrixExpression();
 
-        if (matrix1.size() != matrix2.size())
-        {
+        if (matrix1.size() != matrix2.size()) {
+            delete exp1;
+            delete exp2;
             return new Impossible();
         }
 
         std::vector<Expression*> newMatrix;
-        for (size_t i = 0; i < matrix1.size(); ++i)
-        {
+        for (size_t i = 0; i < matrix1.size(); ++i) {
             auto current_vec_mat1 = dynamic_cast<Vector*>(matrix1[i]);
             auto current_vec_mat2 = dynamic_cast<Vector*>(matrix2[i]);
 
-            if (!current_vec_mat1 || !current_vec_mat2)
-            {
-                delete current_vec_mat1;
-                delete current_vec_mat2;
+            if (!current_vec_mat1 || !current_vec_mat2) {
+                delete exp1;
+                delete exp2;
                 return new Invalid();
             }
 
-            if (current_vec_mat1->size() != current_vec_mat2->size())
-            {
-                delete current_vec_mat1;
-                delete current_vec_mat2;
+            if (current_vec_mat1->size() != current_vec_mat2->size()) {
+                delete exp1;
+                delete exp2;
                 return new Impossible();
             }
 
@@ -314,27 +295,30 @@ Expression* Substraction::eval(Environment& env) const
             auto row1 = current_vec_mat1->getVectorExpression();
             auto row2 = current_vec_mat2->getVectorExpression();
 
-            for (size_t j = 0; j < current_vec_mat1->size(); ++j)
-            {
+            for (size_t j = 0; j < current_vec_mat1->size(); ++j) {
                 newVec.push_back(new Substraction(row1[j], row2[j]));
             }
 
             newMatrix.push_back(new Vector(newVec));
         }
 
-        auto result = new Matrix(newMatrix);
-        return result->eval(env);
+        delete exp1;
+        delete exp2;
+        return new Matrix(newMatrix);
     }
 
-    auto num1 = dynamic_cast<Number*>(exp1.get());
-    auto num2 = dynamic_cast<Number*>(exp2.get());
+    auto num1 = dynamic_cast<Number*>(exp1);
+    auto num2 = dynamic_cast<Number*>(exp2);
 
-    if (num1 == nullptr || num2 == nullptr)
-    {
+    if (num1 == nullptr || num2 == nullptr) {
+        delete exp1;
+        delete exp2;
         return new Invalid();
     }
 
     double resultValue = num1->getNumber() - num2->getNumber();
+    delete exp1;
+    delete exp2;
     return new Number(resultValue);
 }
 std::string Substraction::toString() const noexcept
@@ -345,101 +329,94 @@ std::string Substraction::toString() const noexcept
 //Multiplication
 Expression* Multiplication::eval(Environment& env) const
 {
-    std::unique_ptr<Expression> exp1(leftExpression->eval(env));
-    std::unique_ptr<Expression> exp2(rightExpression->eval(env));
-    auto element1 = dynamic_cast<Value*>(exp1.get());
-    auto element2 = dynamic_cast<Value*>(exp2.get());
+    Expression* exp1 = leftExpression->eval(env);
+    Expression* exp2 = rightExpression->eval(env);
+
+    Value* element1 = dynamic_cast<Value*>(exp1);
+    Value* element2 = dynamic_cast<Value*>(exp2);
 
     if (element1 == nullptr || element2 == nullptr)
     {
-        return new Multiplication(exp1.release(), exp2.release());
+        return new Multiplication(exp1, exp2);
     }
+
     if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
     {
-        return new Multiplication(exp1.release(), exp2.release());
+        return new Multiplication(exp1, exp2);
     }
+
     if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix)
     {
         auto matrix1 = dynamic_cast<Matrix*>(element1)->getMatrixExpression();
         auto matrix2 = dynamic_cast<Matrix*>(element2)->getMatrixExpression();
         std::vector<Expression*> newMatrix;
         auto first_row_mat1 = dynamic_cast<Vector*>(matrix1[0]);
-        if (first_row_mat1 == nullptr)
-        {
-            return new Invalid();
-        }
+
         if (first_row_mat1->size() != matrix2.size())
         {
-            // std::shared_ptr<Expression> imp = std::make_shared<Impossible>();
-            // return imp;
+            exp1->destroy();
+            delete exp1;
+            exp2->destroy();
+            delete exp2;
             return new Impossible();
         }
         for (size_t i = 0; i < matrix1.size(); ++i)
         {
             std::vector<Expression*> newVec;
             auto first_row_mat2 = dynamic_cast<Vector*>(matrix2[0]);
-            if (first_row_mat2 == nullptr)
-            {
-                return new Invalid();
-            }
+
             auto n_row_matrix1 = dynamic_cast<Vector*>(matrix1[i]);
-            if (n_row_matrix1 == nullptr)
-            {
-                return new Invalid();
-            }
+
             for (size_t j = 0; j < first_row_mat2->size(); ++j)
             {
-                std::unique_ptr<Expression> acc(new Number(0.0));
+                Expression* acc = new Number(0.0);
                 for (size_t k = 0; k < n_row_matrix1->size(); ++k)
                 {
                     auto k_row_matrix2 = dynamic_cast<Vector*>(matrix2[k]);
-                    if (k_row_matrix2 == nullptr)
-                    {
-                        return new Invalid();
-                    }
-                    std::unique_ptr<Vector> temp1(new Vector(newVec));
-                    std::unique_ptr<Vector> temp2(new Vector(newVec));
-                    std::unique_ptr<Multiplication> mul(new Multiplication(n_row_matrix1->getVectorExpression()[k], k_row_matrix2->getVectorExpression()[j]));
-                    acc = std::make_unique<Addition>(acc.get(), mul.release());
+                    Expression* mul = new Multiplication(n_row_matrix1->getVectorExpression()[k], k_row_matrix2->getVectorExpression()[j]);
+                    Expression* temp = new Addition(acc, mul);
+                    acc = temp;
                 }
-                newVec.push_back(acc.release());
+                newVec.push_back(acc);
             }
-            std::unique_ptr<Vector> temp(new Vector(newVec));
-            newMatrix.push_back(temp.release());
+            newMatrix.push_back(new Vector(newVec));
         }
-        return std::make_shared<Matrix>(newMatrix)->eval(env);
+        return (new Matrix(newMatrix))->eval(env);
     }
+
     if (element1->getDataType() == DataType::Number && element2->getDataType() == DataType::Matrix)
     {
         auto num = dynamic_cast<Number*>(element1);
         auto matrix1 = dynamic_cast<Matrix*>(element2)->getMatrixExpression();
-        std::vector<Expression*> newMatrix;
+        std::vector<Expression*> newMatrix{};
         for (Expression* vec : matrix1)
         {
             auto v = dynamic_cast<Vector*>(vec);
-            if (v == nullptr)
-            {
-                return new Invalid();
-            }
             std::vector<Expression*> new_vec{};
             for (Expression* exp : v->getVectorExpression())
             {
-                std::unique_ptr<Expression> newVal = std::make_unique<Multiplication>(num,exp);
-                new_vec.push_back(newVal.release());
+                new_vec.push_back(new Multiplication(num, exp));
             }
-            std::unique_ptr<Vector> temp(new Vector(new_vec));
-            newMatrix.push_back(temp.release());
+            newMatrix.push_back(new Vector(new_vec));
         }
-        return std::make_shared<Matrix>(newMatrix)->eval(env);
+        return ((new Matrix(newMatrix))->eval(env));
     }
 
-    auto num1 = dynamic_cast<Number*>(exp1.get());
-    auto num2 = dynamic_cast<Number*>(exp2.get());
+    auto num1 = dynamic_cast<Number*>(exp1);
+    auto num2 = dynamic_cast<Number*>(exp2);
     if (num1 == nullptr || num2 == nullptr)
     {
+        exp1->destroy();
+        delete exp1;
+        exp2->destroy();
+        delete exp2;
         return new Invalid();
     }
     double result = num1->getNumber() * num2->getNumber();
+    exp1->destroy();
+    delete exp1;
+    exp2->destroy();
+    delete exp2;
     return new Number(result);
 }
 std::string Multiplication::toString() const noexcept
@@ -450,8 +427,66 @@ std::string Multiplication::toString() const noexcept
 //Division
 Expression* Division::eval(Environment& env) const
 {
-    return nullptr;
+    Expression* exp1 = leftExpression->eval(env);
+    Expression* exp2 = rightExpression->eval(env);
+
+    Value* element1 = dynamic_cast<Value*>(exp1);
+    Value* element2 = dynamic_cast<Value*>(exp2);
+
+    if (element1 == nullptr || element2 == nullptr)
+    {
+        return new Division(exp1, exp2);
+    }
+
+    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    {
+        return new Division(exp1, exp2);
+    }
+
+    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix)
+    {
+        //TODO
+        return new Unit();
+    }
+
+    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Number)
+    {
+        auto matrix1 = dynamic_cast<Matrix*>(element1);
+        auto num = dynamic_cast<Number*>(element2)->getNumber();
+        if (num == 0)
+        {
+            exp1->destroy();
+            delete exp1;
+            exp2->destroy();
+            delete exp2;
+            return new Impossible();
+        }
+        Expression* newNum = new Number(1/num);
+        return (new Multiplication(newNum, matrix1))->eval(env);
+    }
+
+    auto num1 = dynamic_cast<Number*>(exp1);
+    auto num2 = dynamic_cast<Number*>(exp2);
+    if (num1 == nullptr || num2 == nullptr)
+    {
+        exp1->destroy();
+        delete exp1;
+        exp2->destroy();
+        delete exp2;
+        return new Invalid();
+    }
+    if (std::abs(num2->getNumber()) <= 0.00000001)
+    {
+        return new Impossible();
+    }
+    double result = num1->getNumber() / num2->getNumber();
+    exp1->destroy();
+    delete exp1;
+    exp2->destroy();
+    delete exp2;
+    return (new Number(result))->eval(env);
 }
+
 std::string Division::toString() const noexcept
 {
     return "(" + leftExpression->toString() + ")/(" + rightExpression->toString() + ")";
@@ -460,7 +495,38 @@ std::string Division::toString() const noexcept
 //Power
 Expression* Power::eval(Environment& env) const
 {
-    return nullptr;
+    auto exp1 = leftExpression->eval(env);
+    auto exp2 = rightExpression->eval(env);
+    auto element1 = dynamic_cast<Value*>(exp1);
+    auto element2 = dynamic_cast<Value*>(exp2);
+    if (element1 == nullptr || element2 == nullptr)
+    {
+        return new Power(exp1, exp2);
+    }
+    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    {
+        return new Power(exp1, exp2);
+    }
+    auto num1 = dynamic_cast<Number*>(exp1);
+    auto num2 = dynamic_cast<Number*>(exp2);
+    if (num1 == nullptr || num2 == nullptr)
+    {
+        exp1->destroy();
+        delete exp1;
+        exp2->destroy();
+        delete exp2;
+        return new Invalid();
+    }
+    if (num2->getNumber() <= 0 && std::abs(num1->getNumber()) <= 0.00000001)
+    {
+        return new Impossible();
+    }
+    double result = std::pow(num1->getNumber(), num2->getNumber());
+    exp1->destroy();
+    delete exp1;
+    exp2->destroy();
+    delete exp2;
+    return new Number(result);
 }
 std::string Power::toString() const noexcept
 {
@@ -470,7 +536,7 @@ std::string Power::toString() const noexcept
 //NaturalLogarithm
 Expression* NaturalLogarithm::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string NaturalLogarithm::toString() const noexcept
 {
@@ -480,7 +546,7 @@ std::string NaturalLogarithm::toString() const noexcept
 //Logarithm
 Expression* Logarithm::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string Logarithm::toString() const noexcept
 {
@@ -490,7 +556,7 @@ std::string Logarithm::toString() const noexcept
 // Square Root
 Expression* SquareRoot::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string SquareRoot::toString() const noexcept
 {
@@ -500,7 +566,7 @@ std::string SquareRoot::toString() const noexcept
 // Root
 Expression* Root::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string Root::toString() const noexcept
 {
@@ -510,7 +576,7 @@ std::string Root::toString() const noexcept
 //Sine
 Expression* Sine::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string Sine::toString() const noexcept
 {
@@ -520,7 +586,7 @@ std::string Sine::toString() const noexcept
 //Cosine
 Expression* Cosine::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string Cosine::toString() const noexcept
 {
@@ -530,7 +596,7 @@ std::string Cosine::toString() const noexcept
 //Tangent
 Expression* Tangent::eval(Environment& env) const
 {
-    return nullptr;
+    return new Unit();
 }
 std::string Tangent::toString() const noexcept
 {
@@ -551,7 +617,9 @@ std::string Cotangent::toString() const noexcept
 Pair::Pair(Expression* _first, Expression* _second) : Value(DataType::Pair), first{_first}, second{_second} {}
 Expression* Pair::eval(Environment& env) const
 {
-    return nullptr;
+    auto exp1 = first->eval(env);
+    auto exp2 = second->eval(env);
+    return new Pair(exp1, exp2);
 }
 std::string Pair::toString() const noexcept
 {
@@ -602,25 +670,24 @@ std::string PairSecond::toString() const noexcept
 }
 
 //Vector
-Vector::Vector(std::vector<Expression*> _vectorExpression) : Value(DataType::Vector), vectorExpression(_vectorExpression) {}
+Vector::Vector(std::vector<Expression*>& _vectorExpression) : Value(DataType::Vector), vectorExpression(_vectorExpression) {}
 Expression* Vector::eval(Environment& env) const
 {
-    //return new Invalid();
-    std::vector<Expression*> new_vector;
+    std::vector<Expression*> newVector;
     for (auto exp : vectorExpression)
     {
-        auto element = exp->eval(env);
+        Expression* element = exp->eval(env);
         if (element == nullptr)
         {
-            /*for (auto& ptr : new_vector)
+            for (auto e : newVector)
             {
-                delete ptr;
-            }*/
+                delete e;
+            }
             return new Invalid();
         }
-        new_vector.push_back(element);
+        newVector.push_back(element);
     }
-    return new Vector(new_vector);
+    return new Vector(newVector);
 }
 std::string Vector::toString() const noexcept
 {
@@ -652,12 +719,12 @@ void Vector::destroy() noexcept
 }
 
 //Matrix
-Matrix::Matrix(std::vector<Expression*> _matrixExpression) : Value(DataType::Matrix), matrixExpression(_matrixExpression) {}
+Matrix::Matrix(std::vector<Expression*>& _matrixExpression) : Value(DataType::Matrix), matrixExpression(_matrixExpression) {}
 Expression* Matrix::eval(Environment& env) const
 {
-    //return new Invalid();
     std::vector<Expression*> new_matrix;
     Vector* first_row = dynamic_cast<Vector*>(matrixExpression[0]);
+
     if (first_row == nullptr)
     {
         auto is_id = dynamic_cast<Name*>(matrixExpression[0]);
@@ -681,6 +748,11 @@ Expression* Matrix::eval(Environment& env) const
             {
                 auto temp = is_id->eval(env);
                 row = dynamic_cast<Vector*>(temp);
+                if (row == nullptr)
+                {
+                    delete temp;
+                    return new Invalid();
+                }
             }
             if (row == nullptr)
             {
@@ -694,16 +766,15 @@ Expression* Matrix::eval(Environment& env) const
         std::vector<Expression*> new_vector;
         for (Expression* exp : row->getVectorExpression())
         {
-            auto element = exp->eval(env);
-            auto num = dynamic_cast<Number*>(element);
-            if (num == nullptr)
-            {
-                new_vector.push_back(element);
+            Expression* element = exp->eval(env);
+            if (element == nullptr) {
+                for (auto e : new_vector)
+                {
+                    delete e;
+                }
+                return new Invalid();
             }
-            else
-            {
-                new_vector.push_back(num);
-            }
+            new_vector.push_back(element);
         }
         new_matrix.push_back(new Vector(new_vector));
     }
@@ -984,8 +1055,10 @@ void FindRootBisection::destroy() noexcept
 Display::Display(Expression* _expression) : expression(_expression) {}
 Expression* Display::eval(Environment& env) const
 {
-    std::unique_ptr<Expression> exp(expression->eval(env));
+    Expression* exp = expression->eval(env);
     std::cout << exp->toString();
+    exp->destroy();
+    delete exp;
     return new Unit();
 }
 std::string Display::toString() const noexcept
@@ -1020,23 +1093,19 @@ void Print::destroy() noexcept {}
 
 Expression* Assigment::eval(Environment& env) const
 {
-    //std::unique_ptr<Expression> exp(rightExpression->eval(env));
-    Expression* exp = rightExpression->eval(env);
-
     Name* leftName = dynamic_cast<Name*>(leftExpression);
     if (leftName != nullptr)
     {
-        env.push_front(std::make_pair(leftName->getName(), exp));
+        env.push_front(std::make_pair(leftName->getName(), rightExpression->eval(env)));
         return new Unit();
     }
 
     Variable* leftVar = dynamic_cast<Variable*>(leftExpression);
     if (leftVar != nullptr)
     {
-        env.push_front(std::make_pair(std::string{leftVar->getVariable()}, exp));
+        env.push_front(std::make_pair(std::string{leftVar->getVariable()}, rightExpression->eval(env)));
         return new Unit();
     }
-
     return new Invalid();
 }
 std::string Assigment::toString() const noexcept
@@ -1048,7 +1117,6 @@ std::string Assigment::toString() const noexcept
 ExpressionList::ExpressionList() : expressions{}, sz{0} {}
 Expression* ExpressionList::eval(Environment& env) const
 {
-    //std::unique_ptr<ExpressionList> exp_list(new ExpressionList());
     ExpressionList* exp_list = new ExpressionList();
 
     for (auto &exp : expressions)
@@ -1056,7 +1124,7 @@ Expression* ExpressionList::eval(Environment& env) const
         exp_list->addExpressionBack(exp->eval(env));
     }
 
-    return exp_list/*.release()*/;
+    return exp_list;
 }
 std::string ExpressionList::toString() const noexcept
 {

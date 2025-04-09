@@ -267,7 +267,7 @@ class Vector : public Value
 protected:
     std::vector<Expression*> vectorExpression;
 public:
-    Vector(std::vector<Expression*> _vectorExpression);
+    Vector(std::vector<Expression*>& _vectorExpression);
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     std::vector<Expression*> getVectorExpression() const;
@@ -283,7 +283,7 @@ class Matrix : public Value
 protected:
     std::vector<Expression*> matrixExpression;
 public:
-    Matrix(std::vector<Expression*> _matrixExpression);
+    Matrix(std::vector<Expression*>& _matrixExpression);
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     std::vector<Expression*> getMatrixExpression() const;
