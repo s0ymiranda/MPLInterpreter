@@ -310,6 +310,7 @@ class MatrixLU : public Value
 {
 private:
     Expression* matrix;
+    Pair* lowerUpperDecomposition(std::vector<std::vector<Expression*>> matrixExpression) const;
 public:
     MatrixLU(Expression* _matrix);
     Expression* eval(Environment& env) const override;

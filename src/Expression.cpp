@@ -822,9 +822,10 @@ std::string Cotangent::toString() const noexcept
 Pair::Pair(Expression* _first, Expression* _second) : Value(DataType::Pair), first{_first}, second{_second} {}
 Expression* Pair::eval(Environment& env) const
 {
-    auto exp1 = first->eval(env);
-    auto exp2 = second->eval(env);
-    return new Pair(exp1, exp2);
+    // auto exp1 = first->eval(env);
+    // auto exp2 = second->eval(env);
+    // return new Pair(exp1, exp2);
+    return new Pair(first->eval(env), second->eval(env));
 }
 std::string Pair::toString() const noexcept
 {
@@ -1177,9 +1178,101 @@ void InverseMatrix::destroy() noexcept
 
 // LU Matrix
 MatrixLU::MatrixLU(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
+
+Pair* MatrixLU::lowerUpperDecomposition(std::vector<std::vector<Expression*>> matrixExpression) const
+{
+    size_t size = matrixExpression.size();
+
+    double matrix[size][size];
+
+    for (size_t i = 0; i < size; ++i)
+    {
+        for (size_t j = 0; j < size; ++j)
+        {
+            matrix[i][j] = dynamic_cast<Number*>(matrixExpression[i][j])->getNumber();
+        }
+    }
+
+    auto L = std::vector<std::vector<double>>(size, std::vector<double>(size, 0.0));
+    auto U = std::vector<std::vector<double>>(size, std::vector<double>(size, 0.0));
+    for (int i = 0; i < size; ++i)
+    {
+        L[i][i] = 1.0;
+        for (int j = 0; j < size; ++j)
+        {
+            U[i][j] = matrix[i][j];
+        }
+    }
+    for (int k = 0; k < size - 1; ++k)
+    {
+        int maxIndex = k;
+        double maxVal = std::abs(U[k][k]);
+        for (int i = k + 1; i < size; ++i)
+        {
+            if (std::abs(U[i][k]) > maxVal)
+            {
+                maxVal = std::abs(U[i][k]);
+                maxIndex = i;
+            }
+        }
+        if (maxIndex != k)
+        {
+            std::swap(U[k], U[maxIndex]);
+            for (int i = 0; i < k; ++i)
+            {
+                std::swap(L[k][i], L[maxIndex][i]);
+            }
+        }
+        for (int i = k + 1; i < size; ++i)
+        {
+            L[i][k] = U[i][k] / U[k][k];
+            for (int j = k; j < size; ++j)
+            {
+                U[i][j] -= L[i][k] * U[k][j];
+            }
+        }
+    }
+    std::vector<Expression*> newMatrixLower;
+    std::vector<Expression*> newMatrixUpper;
+    for (size_t i = 0; i < size; ++i)
+    {
+        std::vector<Expression*> newVectorLower;
+        std::vector<Expression*> newVectorUpper;
+        for (size_t j = 0; j < size; ++j)
+        {
+            newVectorLower.push_back(new Number(L[i][j]));
+            newVectorUpper.push_back(new Number(U[i][j]));
+        }
+        newMatrixLower.push_back(new Vector(newVectorLower));
+        newMatrixUpper.push_back(new Vector(newVectorUpper));
+    }
+    return new Pair(new Matrix(newMatrixLower), new Matrix(newMatrixUpper));
+}
+
 Expression* MatrixLU::eval(Environment& env) const
 {
-    return nullptr;
+    auto evMatrix = dynamic_cast<Matrix*>(matrix->eval(env));
+    if (evMatrix == nullptr)
+    {
+        return new Invalid();
+    }
+    auto mat = evMatrix->getMatrixExpression();
+    std::vector<std::vector<Expression*>> matrix_to_lower_upper{};
+    for (auto &vec : mat)
+    {
+        const auto& v = dynamic_cast<Vector*>(vec);
+        std::vector<Expression*> row{};
+        for (auto &exp : v->getVectorExpression())
+        {
+            row.push_back(exp);
+        }
+        matrix_to_lower_upper.push_back(row);
+    }
+    if (matrix_to_lower_upper.size() != matrix_to_lower_upper[0].size()) // Validation for Square Matrix
+    {
+        return new Impossible();
+    }
+    return lowerUpperDecomposition(matrix_to_lower_upper);
 }
 std::string MatrixLU::toString() const noexcept
 {
