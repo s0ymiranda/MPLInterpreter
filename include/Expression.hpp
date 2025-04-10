@@ -282,7 +282,6 @@ class Matrix : public Value
 {
 protected:
     std::vector<Expression*> matrixExpression;
-    // std::vector<std::vector<Expression*>> getVectorVector(Matrix*);
 public:
     Matrix(std::vector<Expression*>& _matrixExpression);
     Expression* eval(Environment& env) const override;
@@ -365,6 +364,7 @@ private:
     Expression* interval;
     Expression* function;
     Expression* variable;
+    Expression* simpsonMethod(double a, double b, int n, Expression* function, Environment& env, Variable* variable) const;
 public:
     Integral(Expression* _interval, Expression* _function, Expression* _variable);
     Expression* eval(Environment& env) const override;
@@ -391,6 +391,7 @@ private:
     Expression* initialValue;
     Expression* tFinal;
     Expression* variable;
+    Expression* rungekuttaMethod(double t, double x, double f, double h, Expression* function, Environment& env, Variable* variable) const;
 public:
     ODEFirstOrderInitialValues(Expression* _funct, Expression* _initialValue, Expression* _tFinal, Expression* _variable);
     Expression* eval(Environment& env) const override;
@@ -405,6 +406,7 @@ private:
     Expression* function;
     Expression* variable;
     Expression* iterationLimit;
+    Expression* bisectionMethod(Number* left, Number* right, Expression* function, Environment& env, Variable* _variable, Number* _iterationLimit) const;
 public:
     FindRootBisection(Expression* _interval, Expression* _function, Expression* _variable, Expression* _iterationLimit = new Number(100));
     Expression* eval(Environment& env) const override;
