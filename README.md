@@ -14,6 +14,8 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 
 - **Abstract Syntax Tree:** Currenty from the Syntactic Validator it is constructed an AST.
 
+- **Semantic Analysis:** Evaluation Methods, that verify the semantic validity of the expressions. Use an Environment to maintain the program's state, including variables and their values, and to assist in identifier resolution.
+
 ## Installation and Usage Instructions
 
 1. **Prerequisites:**
