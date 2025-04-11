@@ -333,6 +333,9 @@ class RealEigenvalues : public Value
 {
 private:
     Expression* matrix;
+    void determ(std::vector<double> auxialiaryVector, std::vector<std::vector<double>> answerMatrix, double x, double& middle, size_t l) const;
+    void bisec(std::vector<double> auxialiaryVector, std::vector<std::vector<double>> answerMatrix, double startInterval, double endInterval, double& middlePoint, size_t l) const;
+    Expression* eigenvalues(std::vector<std::vector<Expression*>> matrix) const;
 public:
     RealEigenvalues(Expression* _matrix);
     Expression* eval(Environment& env) const override;

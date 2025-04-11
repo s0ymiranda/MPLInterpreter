@@ -196,7 +196,7 @@ Expression* Addition::eval(Environment& env) const
             return new Impossible();
         }
 
-        std::vector<Expression*> newMatrix;
+        std::vector<Expression*> newMatrix{};
         for (size_t i = 0; i < matrix1.size(); ++i)
         {
             auto current_vec_mat1 = dynamic_cast<Vector*>(matrix1[i]);
@@ -210,18 +210,26 @@ Expression* Addition::eval(Environment& env) const
                 return new Impossible();
             }
 
-            std::vector<Expression*> newVec;
+            std::vector<Expression*> newVec{};
             auto row1 = current_vec_mat1->getVectorExpression();
             auto row2 = current_vec_mat2->getVectorExpression();
 
-            for (size_t j = 0; j < current_vec_mat1->size(); ++j) {
+            for (size_t j = 0; j < current_vec_mat1->size(); ++j)
+            {
                 newVec.push_back(new Addition(row1[j], row2[j]));
             }
 
             newMatrix.push_back(new Vector(newVec));
-        }
 
-        return (Matrix(newMatrix)).eval(env);
+        }
+        auto res = (Matrix(newMatrix)).eval(env);
+
+        exp1->destroy();
+        delete exp1;
+        exp2->destroy();
+        delete exp2;
+
+        return res;
     }
 
     auto num1 = dynamic_cast<Number*>(exp1);
@@ -328,7 +336,7 @@ Expression* Substraction::eval(Environment& env) const
 }
 std::string Substraction::toString() const noexcept
 {
-    return leftExpression->toString() + " - " + rightExpression->toString();
+    return leftExpression->toString() + " - (" + rightExpression->toString() + ")";
 }
 
 //Multiplication
@@ -796,7 +804,7 @@ Expression* Tangent::eval(Environment& env) const
         delete exp;
         return new Invalid();
     }
-    if (num->getNumber() < 0)
+    if (std::abs(std::cos(num->getNumber())) <= 0.00000001)
     {
         exp->destroy();
         delete exp;
@@ -832,7 +840,7 @@ Expression* Cotangent::eval(Environment& env) const
         delete exp;
         return new Invalid();
     }
-    if (num->getNumber() < 0)
+    if (std::abs(std::sin(num->getNumber())) <= 0.00000001)
     {
         exp->destroy();
         delete exp;
@@ -978,57 +986,42 @@ void Vector::destroy() noexcept
 Matrix::Matrix(std::vector<Expression*>& _matrixExpression) : Value(DataType::Matrix), matrixExpression(_matrixExpression) {}
 Expression* Matrix::eval(Environment& env) const
 {
-    std::vector<Expression*> new_matrix;
-    Vector* first_row = dynamic_cast<Vector*>(matrixExpression[0]);
+    std::vector<Expression*> new_matrix{};
+    auto first = matrixExpression[0]->eval(env);
+
+    Vector* first_row = dynamic_cast<Vector*>(first);
 
     if (first_row == nullptr)
     {
-        auto is_id = dynamic_cast<Name*>(matrixExpression[0]);
-        if (is_id)
-        {
-            first_row = dynamic_cast<Vector*>(is_id->eval(env));
-        }
-        if (first_row == nullptr)
-        {
-            return new Invalid();
-        }
+        first->destroy();
+        delete first;
+        return new Invalid();
     }
     size_t row_size = first_row->size();
-    first_row->destroy();
-    delete first_row;
+
+    first->destroy();
+    delete first;
+
     for (Expression* vec : matrixExpression)
     {
-        Vector* row = dynamic_cast<Vector*>(vec);
+        auto r = vec->eval(env);
+        Vector* row = dynamic_cast<Vector*>(r);
         if (row == nullptr)
         {
-            auto is_id = dynamic_cast<Name*>(vec);
-            if (is_id)
-            {
-                auto temp = is_id->eval(env);
-                row = dynamic_cast<Vector*>(temp);
-                if (row == nullptr)
-                {
-                    temp->destroy();
-                    delete temp;
-                    return new Invalid();
-                }
-                temp->destroy();
-                delete temp;
-            }
-            if (row == nullptr)
-            {
-                return new Invalid();
-            }
+            r->destroy();
+            delete r;
+            return new Invalid();
         }
         if (row->size() != row_size)
         {
             return new Invalid();
         }
-        std::vector<Expression*> new_vector;
+        std::vector<Expression*> new_vector{};
         for (Expression* exp : row->getVectorExpression())
         {
             Expression* element = exp->eval(env);
-            if (element == nullptr) {
+            if (element == nullptr)
+            {
                 for (auto e : new_vector)
                 {
                     e->destroy();
@@ -1038,6 +1031,10 @@ Expression* Matrix::eval(Environment& env) const
             }
             new_vector.push_back(element);
         }
+
+        r->destroy();
+        delete r;
+
         new_matrix.push_back(new Vector(new_vector));
     }
     return new Matrix(new_matrix);
@@ -1446,9 +1443,129 @@ void TridiagonalMatrix::destroy() noexcept
 
 // Eigenvalues
 RealEigenvalues::RealEigenvalues(Expression* _matrix) : Value(DataType::Matrix), matrix(_matrix) {}
+void RealEigenvalues::determ(std::vector<double> auxialiaryVector, std::vector<std::vector<double>> answerMatrix, double x, double& middle, size_t l) const
+{
+    auxialiaryVector[0] = answerMatrix[0][0] - x;
+    if (l == 1) return;
+    for (int k = 1; k < l; ++k)
+    {
+        auxialiaryVector[k] = (answerMatrix[k][k] - x) * auxialiaryVector[k - 1] - answerMatrix[k][k - 1] * answerMatrix[k][k - 1] * ((k - 2 < 0) ? 1 : auxialiaryVector[k - 2]);
+    }
+    middle = auxialiaryVector[l - 1];
+}
+void RealEigenvalues::bisec(std::vector<double> auxialiaryVector, std::vector<std::vector<double>> answerMatrix, double startInterval, double endInterval, double& middlePoint, size_t l) const
+{
+    int iterationsCounter = 0;
+    double startValue, endValue, dx, xbValue, middleValue;
+    determ(auxialiaryVector, answerMatrix, startInterval, startValue, l);
+    determ(auxialiaryVector, answerMatrix, endInterval, endValue, l);
+    while (true)
+    {
+        ++iterationsCounter;
+        if (iterationsCounter > 99) return;
+        dx = endInterval - startInterval;
+        if (dx < 0.0000001) return;
+        if (dx > 1)
+        {
+            middlePoint = (startInterval + endInterval) / 2;
+            determ(auxialiaryVector, answerMatrix, middlePoint, middleValue, l);
+            if (startValue * middleValue < 0)
+            {
+                endInterval = middlePoint;
+                endValue = middleValue;
+                continue;
+            }
+            startInterval = middlePoint;
+            startValue = middleValue;
+            continue;
+        }
+        xbValue = middlePoint;
+        middlePoint = (startInterval * endValue - endInterval * startValue) / (endValue - startValue);
+        determ(auxialiaryVector, answerMatrix, middlePoint, middleValue, l);
+        if (std::abs(xbValue - middlePoint) < 0.000001) return;
+        if (startValue * middleValue < 0)
+        {
+            endInterval = middlePoint;
+            endValue = middleValue;
+            continue;
+        }
+        startInterval = middlePoint;
+        startValue = middleValue;
+    }
+}
+Expression* RealEigenvalues::eigenvalues(std::vector<std::vector<Expression*>> matrix) const
+{
+    size_t size = matrix.size();
+    std::vector<std::vector<double>> answerMatrix(size, std::vector<double>(size)), eigenvaluesIterations(size + 1, std::vector<double>(size + 1));
+    for (size_t i = 0; i < size; ++i)
+    {
+        for (size_t j = 0; j < size; ++j)
+        {
+            answerMatrix[i][j] = dynamic_cast<Number*>(matrix[i][j])->getNumber();
+        }
+    }
+
+    std::vector<double> auxiliaryVector(size);
+
+    int maxIterations = size;
+    for (size_t l = 1; l <= maxIterations; ++l)
+    {
+        if (l == 1)
+        {
+            eigenvaluesIterations[1][1] = answerMatrix[0][0];
+        }
+        else
+        {
+            for (int j = 1; j <= l; ++j)
+            {
+                double startInterval = eigenvaluesIterations[l - 1][j - 1];
+                double endInterval = eigenvaluesIterations[l - 1][j];
+                double middlePoint;
+                bisec(auxiliaryVector, answerMatrix, startInterval, endInterval, middlePoint, l);
+                eigenvaluesIterations[l][j] = middlePoint;
+            }
+        }
+        if (l < maxIterations)
+        {
+            eigenvaluesIterations[l][0] = -99;
+            eigenvaluesIterations[l][l + 1] = 99;
+        }
+    }
+
+    std::vector<Expression*> newVector{};
+    for (size_t i = 1; i <= size; ++i)
+    {
+        newVector.push_back(new Number(eigenvaluesIterations[size][i]));
+    }
+    return new Vector(newVector);
+}
 Expression* RealEigenvalues::eval(Environment& env) const
 {
-    return nullptr;
+    auto exp = matrix->eval(env);
+    auto matrixExp = dynamic_cast<Matrix*>(exp);
+    if (matrixExp == nullptr)
+    {
+        exp->destroy();
+        delete exp;
+        return new Invalid();
+    }
+
+    auto tridiagonalMatrix = TridiagonalMatrix(matrixExp).eval(env);
+    auto mat = dynamic_cast<Matrix*>(tridiagonalMatrix)->getMatrixExpression();
+    std::vector<std::vector<Expression*>> toeigen;
+
+    for (auto& v : mat)
+    {
+        auto r = v->eval(env);
+        auto row = dynamic_cast<Vector*>(r);
+        if (row)
+        {
+            auto vect = row->getVectorExpression();
+            toeigen.push_back(vect);
+        }
+    }
+
+    return eigenvalues(toeigen);
 }
 std::string RealEigenvalues::toString() const noexcept
 {
@@ -1517,7 +1634,7 @@ std::string Function::toString() const noexcept
 
 //Integral
 Integral::Integral(Expression* _interval, Expression* _function, Expression* _variable) : interval(_interval), function(_function), variable(_variable) {}
-Expression* Integral::simpsonMethod(double a, double b, int n, Expression* function, Environment& env, Variable* variable) const
+Expression* Integral::simpsonMethod(double a, double b, int n, Expression* function, Environment& env, Variable* _variable) const
 {
     double s = 0.0;
     double ss = 0.0;
@@ -1529,11 +1646,12 @@ Expression* Integral::simpsonMethod(double a, double b, int n, Expression* funct
         {
             double x = a + h * i;
             double w = (i == 0 || i == 3) ? 1 : 3;
-            env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x)));
+            env.push_front(std::make_pair(std::string{_variable->getVariable()}, new Number(x)));
             auto re = function->eval(env);
             Number* funcResult = dynamic_cast<Number*>(re);
             if (funcResult == nullptr)
             {
+                std::cout<<"AQUI34534"<<std::endl;
                 return new Invalid();
             }
             ss = ss + w * funcResult->getNumber();
@@ -1558,7 +1676,7 @@ Expression* Integral::simpsonMethod(double a, double b, int n, Expression* funct
         {
             w = 1;
         }
-        env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x)));
+        env.push_front(std::make_pair(std::string{_variable->getVariable()}, new Number(x)));
         auto re = function->eval(env);
         Number* funcResult = dynamic_cast<Number*>(re);
         if (funcResult == nullptr)
@@ -1593,7 +1711,8 @@ Expression* Integral::eval(Environment& env) const
         return new Invalid();
     }
     Environment envIntegral = std::forward_list<std::pair<std::string, Expression*>>{};
-    auto result = simpsonMethod(a, b, 100, function, envIntegral, var);
+    auto result = simpsonMethod(a, b, 100, function->eval(env), envIntegral, var);
+
     for (auto& t : envIntegral)
     {
         if (t.second != nullptr)
@@ -1779,7 +1898,7 @@ Expression* ODEFirstOrderInitialValues::eval(Environment& env) const
 
     Environment envOde = std::forward_list<std::pair<std::string, Expression*>>{};
 
-    auto result = rungekuttaMethod(t, x, f, step, funct, envOde, var);
+    auto result = rungekuttaMethod(t, x, f, step, funct->eval(env), envOde, var);
     for (auto& t : envOde)
     {
         if (t.second != nullptr)
@@ -1831,6 +1950,7 @@ Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expr
 
     std::string var = std::string{_variable->getVariable()};
 
+    std::cout <<a <<std::endl;
     env.push_front(std::make_pair(var, left));
     auto _ya = dynamic_cast<Number*>(evFunction->eval(env));
     if (_ya == nullptr)
@@ -1857,7 +1977,7 @@ Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expr
         auto _yb = dynamic_cast<Number*>(evFunction->eval(env));
         if (_yb == nullptr)
         {
-            return new Invalid();
+            break;
         }
         double yb = _yb->getNumber();
         if (std::abs(b - a) < ep)
@@ -1914,7 +2034,7 @@ Expression* FindRootBisection::eval(Environment& env) const
     }
 
     Environment envBi = std::forward_list<std::pair<std::string, Expression*>>{};
-    auto result = bisectionMethod(left, right, function, envBi, var, it);
+    auto result = bisectionMethod(left, right, function->eval(env), envBi, var, it);
     for (auto& t : envBi)
     {
         if (t.second != nullptr)
