@@ -40,7 +40,8 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
    ```bash
       ./build/parser /samples/"name of the file"
    ```
-
+## Note
+   In the samples folder you can found examples usages for the lenguage. So you can make your own scripts of our lenguage and test then!. 
 
 ## Acknowledgements
 For more information about the development and specifications of the Mathematical Programming Language, you can refer to
