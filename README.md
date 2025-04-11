@@ -42,6 +42,7 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
    ```
 ## Note
    In the samples folder you can found examples usages for the lenguage. So you can make your own scripts of our lenguage and test then!. 
+   Currently the main.cpp archive obtains the AST from the parser and evaluates it with the eval method and show the result with the toString method. 
 
 ## Acknowledgements
 For more information about the development and specifications of the Mathematical Programming Language, you can refer to
