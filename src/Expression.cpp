@@ -183,7 +183,8 @@ Expression* Addition::eval(Environment& env) const
         return new Addition(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix) {
+    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix)
+    {
         auto matrix1 = (dynamic_cast<Matrix*>(element1))->getMatrixExpression();
         auto matrix2 = (dynamic_cast<Matrix*>(element2))->getMatrixExpression();
 
@@ -216,7 +217,7 @@ Expression* Addition::eval(Environment& env) const
 
             for (size_t j = 0; j < current_vec_mat1->size(); ++j)
             {
-                newVec.push_back(new Addition(row1[j], row2[j]));
+                newVec.push_back(Addition(row1[j], row2[j]).eval(env));
             }
 
             newMatrix.push_back(new Vector(newVec));
@@ -235,7 +236,8 @@ Expression* Addition::eval(Environment& env) const
     auto num1 = dynamic_cast<Number*>(exp1);
     auto num2 = dynamic_cast<Number*>(exp2);
 
-    if (num1 == nullptr || num2 == nullptr) {
+    if (num1 == nullptr || num2 == nullptr)
+    {
         exp1->destroy();
         delete exp1;
         exp2->destroy();
@@ -275,7 +277,8 @@ Expression* Substraction::eval(Environment& env) const
         return new Substraction(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix) {
+    if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Matrix)
+    {
         auto matrix1 = (dynamic_cast<Matrix*>(element1))->getMatrixExpression();
         auto matrix2 = (dynamic_cast<Matrix*>(element2))->getMatrixExpression();
 
@@ -307,19 +310,26 @@ Expression* Substraction::eval(Environment& env) const
             auto row2 = current_vec_mat2->getVectorExpression();
 
             for (size_t j = 0; j < current_vec_mat1->size(); ++j) {
-                newVec.push_back(new Substraction(row1[j], row2[j]));
+                newVec.push_back(Substraction(row1[j], row2[j]).eval(env));
             }
 
             newMatrix.push_back(new Vector(newVec));
         }
+        auto res = (Matrix(newMatrix)).eval(env);
 
-        return (Matrix(newMatrix)).eval(env);
+        exp1->destroy();
+        delete exp1;
+        exp2->destroy();
+        delete exp2;
+
+        return res;
     }
 
     auto num1 = dynamic_cast<Number*>(exp1);
     auto num2 = dynamic_cast<Number*>(exp2);
 
-    if (num1 == nullptr || num2 == nullptr) {
+    if (num1 == nullptr || num2 == nullptr)
+    {
         exp1->destroy();
         delete exp1;
         exp2->destroy();
@@ -987,6 +997,10 @@ Matrix::Matrix(std::vector<Expression*>& _matrixExpression) : Value(DataType::Ma
 Expression* Matrix::eval(Environment& env) const
 {
     std::vector<Expression*> new_matrix{};
+    if (!matrixExpression.size())
+    {
+        return new Invalid();
+    }
     auto first = matrixExpression[0]->eval(env);
 
     Vector* first_row = dynamic_cast<Vector*>(first);
@@ -1537,6 +1551,21 @@ Expression* RealEigenvalues::eigenvalues(std::vector<std::vector<Expression*>> m
     {
         newVector.push_back(new Number(eigenvaluesIterations[size][i]));
     }
+
+    // for (auto& vec : matrix)
+    // {
+    //     for (auto& exp : vec)
+    //     {
+    //         if (exp != nullptr)
+    //         {
+    //             exp->destroy();
+    //             delete exp;
+    //         }
+    //     }
+    //     vec.clear();
+    // }
+    // matrix.clear();
+
     return new Vector(newVector);
 }
 Expression* RealEigenvalues::eval(Environment& env) const
@@ -1551,21 +1580,52 @@ Expression* RealEigenvalues::eval(Environment& env) const
     }
 
     auto tridiagonalMatrix = TridiagonalMatrix(matrixExp).eval(env);
-    auto mat = dynamic_cast<Matrix*>(tridiagonalMatrix)->getMatrixExpression();
+    auto matTri = dynamic_cast<Matrix*>(tridiagonalMatrix);
+
+    if (matTri == nullptr)
+    {
+        exp->destroy();
+        delete exp;
+        tridiagonalMatrix->destroy();
+        delete tridiagonalMatrix;
+        return new Invalid();
+    }
+
+    auto mat = matTri->getMatrixExpression();
     std::vector<std::vector<Expression*>> toeigen;
 
     for (auto& v : mat)
     {
         auto r = v->eval(env);
         auto row = dynamic_cast<Vector*>(r);
-        if (row)
+        if (row == nullptr)
         {
-            auto vect = row->getVectorExpression();
-            toeigen.push_back(vect);
+            exp->destroy();
+            delete exp;
+            tridiagonalMatrix->destroy();
+            delete tridiagonalMatrix;
+            r->destroy();
+            delete r;
+            return new Invalid();
+        }
+        auto vect = row->getVectorExpression();
+        toeigen.push_back(vect);
+        delete r;
+    }
+    auto result = eigenvalues(toeigen);
+    for (auto& c : toeigen)
+    {
+        for(auto& r : c)
+        {
+            r->destroy();
+            delete r;
         }
     }
-
-    return eigenvalues(toeigen);
+    exp->destroy();
+    delete exp;
+    tridiagonalMatrix->destroy();
+    delete tridiagonalMatrix;
+    return result;
 }
 std::string RealEigenvalues::toString() const noexcept
 {
@@ -1687,27 +1747,49 @@ Expression* Integral::simpsonMethod(double a, double b, int n, Expression* funct
         re->destroy();
         delete re;
     }
+    function->destroy();
+    delete function;
     return new Number(ss + s * h / 3);
 }
 Expression* Integral::eval(Environment& env) const
 {
-    auto inter = dynamic_cast<Pair*>(interval->eval(env));
+    auto in = interval->eval(env);
+    auto inter = dynamic_cast<Pair*>(in);
     if (inter == nullptr)
     {
+        in->destroy();
+        delete in;
         return nullptr;
     }
-    auto to = dynamic_cast<Number*>(PairFirst{inter}.eval(env));
-    auto tf = dynamic_cast<Number*>(PairSecond{inter}.eval(env));
+    auto t1 = PairFirst{inter}.eval(env);
+    auto t2 = PairSecond{inter}.eval(env);
+    auto to = dynamic_cast<Number*>(t1);
+    auto tf = dynamic_cast<Number*>(t2);
     if (to == nullptr || tf == nullptr)
     {
+        in->destroy();
+        delete in;
+        t1->destroy();
+        delete t1;
+        t2->destroy();
+        delete t2;
         return new Invalid();
     }
     double a = to->getNumber();
     double b = tf->getNumber();
 
-    auto var = dynamic_cast<Variable*>(variable->eval(env));
+    auto va = variable->eval(env);
+    auto var = dynamic_cast<Variable*>(va);
     if (var == nullptr)
     {
+        in->destroy();
+        delete in;
+        t1->destroy();
+        delete t1;
+        t2->destroy();
+        delete t2;
+        va->destroy();
+        delete va;
         return new Invalid();
     }
     Environment envIntegral = std::forward_list<std::pair<std::string, Expression*>>{};
@@ -1722,6 +1804,14 @@ Expression* Integral::eval(Environment& env) const
             t.second = nullptr;
         }
     }
+    in->destroy();
+    delete in;
+    t1->destroy();
+    delete t1;
+    t2->destroy();
+    delete t2;
+    va->destroy();
+    delete va;
     return result;
 }
 std::string Integral::toString() const noexcept
@@ -1757,17 +1847,25 @@ Expression* Interpolate::eval(Environment& env) const
 {
     std::vector<double> x;
     std::vector<double> f;
-    auto vector = (dynamic_cast<Vector*>(vectorExpression->eval(env)));
+    auto ve = vectorExpression->eval(env);
+    auto vector = (dynamic_cast<Vector*>(ve));
     if (vector == nullptr)
     {
+        ve->destroy();
+        delete ve;
         return new Invalid();
     }
     auto vec = vector->getVectorExpression();
     int n = vec.size();
 
-    auto number = dynamic_cast<Number*>(numInter->eval(env));
+    auto nu = numInter->eval(env);
+    auto number = dynamic_cast<Number*>(nu);
     if (number == nullptr)
     {
+        nu->destroy();
+        delete nu;
+        ve->destroy();
+        delete ve;
         return new Invalid();
     }
     double xa = number->getNumber();
@@ -1777,16 +1875,34 @@ Expression* Interpolate::eval(Environment& env) const
         auto pair = dynamic_cast<Pair*>(exp);
         if (pair == nullptr || pair->getDataType() != DataType::Pair)
         {
+            nu->destroy();
+            delete nu;
+            ve->destroy();
+            delete ve;
             return new Invalid();
         }
-        auto num = dynamic_cast<Number*>(PairFirst{pair}.eval(env));
-        auto num2 = dynamic_cast<Number*>(PairSecond{pair}.eval(env));
+        auto num0 = PairFirst{pair}.eval(env);
+        auto num1 = PairSecond{pair}.eval(env);
+        auto num = dynamic_cast<Number*>(num0);
+        auto num2 = dynamic_cast<Number*>(num1);
         if (num == nullptr || num2 == nullptr)
         {
+            nu->destroy();
+            delete nu;
+            ve->destroy();
+            delete ve;
+            num0->destroy();
+            delete num0;
+            num1->destroy();
+            delete num1;
             return new Invalid();
         }
         x.push_back(num->getNumber());
         f.push_back(num2->getNumber());
+        num0->destroy();
+        delete num0;
+        num1->destroy();
+        delete num1;
     }
     double y_res = 0.0;
     for (int i = 0; i < n; ++i)
@@ -1801,6 +1917,10 @@ Expression* Interpolate::eval(Environment& env) const
         }
         y_res += z * f[i];
     }
+    nu->destroy();
+    delete nu;
+    ve->destroy();
+    delete ve;
     return new Number(y_res);
 }
 std::string Interpolate::toString() const noexcept
@@ -1831,16 +1951,19 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
     while(t < tn)
     {
         env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x)));
-        auto num1 = dynamic_cast<Number*>(function->eval(env));
+        auto ev_func1 = function->eval(env);
+        auto num1 = dynamic_cast<Number*>(ev_func1);
+
 
         if (num1 == nullptr)
         {
-            return new Invalid;
+            return new Invalid();
         }
         double k1 = h * num1->getNumber();
 
         env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x + 0.5 * k1)));
-        auto num2 = dynamic_cast<Number*>(function->eval(env));
+        auto ev_func2 = function->eval(env);
+        auto num2 = dynamic_cast<Number*>(ev_func2);
 
         if(num2 == nullptr)
         {
@@ -1850,7 +1973,8 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
         double k2 = h * num2->getNumber();
 
         env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x + 0.5 * k2)));
-        auto num3 = dynamic_cast<Number*>(function->eval(env));
+        auto ev_func3 = function->eval(env);
+        auto num3 = dynamic_cast<Number*>(ev_func3);
 
         if (num3 == nullptr)
         {
@@ -1859,7 +1983,8 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
         double k3 = h * num3->getNumber();
 
         env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x + k3)));
-        auto num4 = dynamic_cast<Number*>(function->eval(env));
+        auto ev_func4 = function->eval(env);
+        auto num4 = dynamic_cast<Number*>(ev_func4);
 
         if (num4 == nullptr)
         {
@@ -1869,17 +1994,43 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
 
         x = x + (1.0/6.0)*(k1 + 2*k2 + 2*k3 + k4);
         t = t + h;
+
+        ev_func1->destroy();
+        delete ev_func1;
+        ev_func2->destroy();
+        delete ev_func2;
+        ev_func3->destroy();
+        delete ev_func3;
+        ev_func4->destroy();
+        delete ev_func4;
     }
+    function->destroy();
+    delete function;
     return new Pair(new Number(t), new Number(x));
 }
 Expression* ODEFirstOrderInitialValues::eval(Environment& env) const
 {
-    auto initialV = dynamic_cast<Pair*>(initialValue->eval(env));
-    auto to = dynamic_cast<Number*>(PairFirst{initialValue}.eval(env));
-    auto xo = dynamic_cast<Number*>(PairSecond{initialValue}.eval(env));
-    auto tEval = dynamic_cast<Number*>(tFinal->eval(env));
+    auto ini = initialValue->eval(env);
+    auto initialV = dynamic_cast<Pair*>(ini);
+
+    auto t0 = PairFirst{initialValue}.eval(env);
+    auto to = dynamic_cast<Number*>(t0);
+
+    auto x0 = PairSecond{initialValue}.eval(env);
+    auto xo = dynamic_cast<Number*>(x0);
+
+    auto tE = tFinal->eval(env);
+    auto tEval = dynamic_cast<Number*>(tE);
     if (initialV == nullptr || to == nullptr || xo == nullptr || tEval == nullptr)
     {
+        ini->destroy();
+        delete ini;
+        t0->destroy();
+        delete t0;
+        x0->destroy();
+        delete x0;
+        tE->destroy();
+        delete tE;
         return new Invalid();
     }
     double t = to->getNumber();
@@ -1888,17 +2039,37 @@ Expression* ODEFirstOrderInitialValues::eval(Environment& env) const
     double step = 0.1;
     if (f < t)
     {
+        ini->destroy();
+        delete ini;
+        t0->destroy();
+        delete t0;
+        x0->destroy();
+        delete x0;
+        tE->destroy();
+        delete tE;
         return new Impossible();
     }
-    auto var = dynamic_cast<Variable*>(variable->eval(env));
+    auto va = variable->eval(env);
+    auto var = dynamic_cast<Variable*>(va);
     if (var == nullptr)
     {
+        ini->destroy();
+        delete ini;
+        t0->destroy();
+        delete t0;
+        x0->destroy();
+        delete x0;
+        tE->destroy();
+        delete tE;
+        va->destroy();
+        delete va;
         new Invalid();
     }
 
     Environment envOde = std::forward_list<std::pair<std::string, Expression*>>{};
 
     auto result = rungekuttaMethod(t, x, f, step, funct->eval(env), envOde, var);
+
     for (auto& t : envOde)
     {
         if (t.second != nullptr)
@@ -1908,6 +2079,16 @@ Expression* ODEFirstOrderInitialValues::eval(Environment& env) const
             t.second = nullptr;
         }
     }
+    ini->destroy();
+    delete ini;
+    t0->destroy();
+    delete t0;
+    x0->destroy();
+    delete x0;
+    tE->destroy();
+    delete tE;
+    va->destroy();
+    delete va;
     return result;
 }
 std::string ODEFirstOrderInitialValues::toString() const noexcept
@@ -1950,20 +2131,25 @@ Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expr
 
     std::string var = std::string{_variable->getVariable()};
 
-    std::cout <<a <<std::endl;
     env.push_front(std::make_pair(var, left));
     auto _ya = dynamic_cast<Number*>(evFunction->eval(env));
+
+    env.push_front(std::make_pair(var, right));
+
     if (_ya == nullptr)
     {
+        evFunction->destroy();
+        delete evFunction;
         return new Invalid();
     }
     double ya = _ya->getNumber();
 
-    env.push_front(std::make_pair(var, right));
 
     auto _yc = dynamic_cast<Number*>(evFunction->eval(env));
     if (_yc == nullptr)
     {
+        evFunction->destroy();
+        delete evFunction;
         return new Invalid();
     }
     double yc_ = _yc->getNumber();
@@ -1974,14 +2160,19 @@ Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expr
     {
         double b = (a + c) / 2;
         env.push_front(std::make_pair(var, new Number(b)));
-        auto _yb = dynamic_cast<Number*>(evFunction->eval(env));
+        auto yb_ = evFunction->eval(env);
+        auto _yb = dynamic_cast<Number*>(yb_);
         if (_yb == nullptr)
         {
+            yb_->destroy();
+            delete yb_;
             break;
         }
         double yb = _yb->getNumber();
         if (std::abs(b - a) < ep)
         {
+            yb_->destroy();
+            delete yb_;
             break;
         }
         if (ya * yb <= 0)
@@ -1994,42 +2185,94 @@ Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expr
             a = b;
             ya = yb;
         }
+        yb_->destroy();
+        delete yb_;
     }
+    evFunction->destroy();
+    delete evFunction;
+    _ya->destroy();
+    delete _ya;
+    _yc->destroy();
+    delete _yc;
     return new Number((a + c) / 2);
 }
 Expression* FindRootBisection::eval(Environment& env) const
 {
-    auto evInterval = dynamic_cast<Pair*>(interval->eval(env));
+    auto evIn = interval->eval(env);
+    auto evInterval = dynamic_cast<Pair*>(evIn);
+
     if (evInterval == nullptr)
     {
+        evIn->destroy();
+        delete evIn;
         return new Invalid();
     }
-    auto left = dynamic_cast<Number*>(PairFirst{evInterval}.eval(env));
-    auto right = dynamic_cast<Number*>(PairSecond{evInterval}.eval(env));
+    auto l = PairFirst{evInterval}.eval(env);
+    auto left = dynamic_cast<Number*>(l);
+    auto r = PairSecond{evInterval}.eval(env);
+    auto right = dynamic_cast<Number*>(r);
 
     if (left == nullptr || right == nullptr)
     {
+        evIn->destroy();
+        delete evIn;
+        l->destroy();
+        delete l;
+        r->destroy();
+        delete r;
         return new Invalid();
     }
     if (left->getDataType() != DataType::Number || right->getDataType() != DataType::Number)
     {
+        evIn->destroy();
+        delete evIn;
+        l->destroy();
+        delete l;
+        r->destroy();
+        delete r;
         return new Invalid();
     }
     if (left->getNumber() > right->getNumber())
     {
+        evIn->destroy();
+        delete evIn;
+        l->destroy();
+        delete l;
+        r->destroy();
+        delete r;
         return new Invalid();
     }
-    auto var = dynamic_cast<Variable*>(variable->eval(env));
+    auto v = variable->eval(env);
+    auto var = dynamic_cast<Variable*>(v);
 
     if (var == nullptr)
     {
+        evIn->destroy();
+        delete evIn;
+        l->destroy();
+        delete l;
+        r->destroy();
+        delete r;
+        v->destroy();
+        delete v;
         return new Invalid();
     }
 
-    auto it = dynamic_cast<Number*>(iterationLimit->eval(env));
+    auto ite = iterationLimit->eval(env);
+    auto it = dynamic_cast<Number*>(ite);
 
     if (it == nullptr)
     {
+        evIn->destroy();
+        delete evIn;
+        l->destroy();
+        delete l;
+        r->destroy();
+        delete r;
+        v->destroy();
+        delete v;
+        ite->destroy();
+        delete ite;
         return new Invalid();
     }
 
@@ -2044,6 +2287,13 @@ Expression* FindRootBisection::eval(Environment& env) const
             t.second = nullptr;
         }
     }
+
+    evIn->destroy();
+    delete evIn;
+    v->destroy();
+    delete v;
+    ite->destroy();
+    delete ite;
     return result;
 }
 std::string FindRootBisection::toString() const noexcept
