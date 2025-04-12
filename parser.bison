@@ -132,12 +132,12 @@ pair_expression : TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN
                 ;
 
 vector_expression : TOKEN_LBRACKET expression_list TOKEN_RBRACKET                       {
-                                                                                            std::vector<Expression*> exprs;
-                                                                                            //std::list<Expression*> exprs;
+                                                                                            std::vector<Expression*> exprs{};
                                                                                             ExpressionList* list = dynamic_cast<ExpressionList*>($2);
                                                                                             if (list)
                                                                                             {
                                                                                                 exprs = list->getVectorExpression();
+                                                                                                delete $2;
                                                                                             }
                                                                                             else
                                                                                             {
@@ -148,8 +148,7 @@ vector_expression : TOKEN_LBRACKET expression_list TOKEN_RBRACKET               
                   ;
 
 matrix_expression : TOKEN_LBRACE vector_list TOKEN_RBRACE                               {
-                                                                                            std::vector<Expression*> matrix;
-                                                                                            //std::list<Expression*> matrix;
+                                                                                            std::vector<Expression*> matrix{};
                                                                                             ExpressionList* list = dynamic_cast<ExpressionList*>($2);
                                                                                             if (list)
                                                                                             {
@@ -170,6 +169,7 @@ matrix_expression : TOKEN_LBRACE vector_list TOKEN_RBRACE                       
                                                                                                     }
                                                                                                 }
                                                                                             }
+                                                                                            delete $2;
                                                                                             $$ = new Matrix(matrix);
                                                                                         }
                   ;
@@ -202,7 +202,8 @@ vector_list : vector_list TOKEN_COMMA vector_expression                         
                                                                                             {
                                                                                                 list->addExpressionBack($3);
                                                                                                 $$ = list;
-                                                                                            } else
+                                                                                            }
+                                                                                            else
                                                                                             {
                                                                                                 ExpressionList* newList = new ExpressionList();
                                                                                                 newList->addExpressionBack($1);
@@ -221,7 +222,8 @@ vector_list : vector_list TOKEN_COMMA vector_expression                         
                                                                                             {
                                                                                                 list->addExpressionBack(new Name(std::string(id)));
                                                                                                 $$ = list;
-                                                                                            } else
+                                                                                            }
+                                                                                            else
                                                                                             {
                                                                                                 ExpressionList* newList = new ExpressionList();
                                                                                                 newList->addExpressionBack($1);
@@ -284,10 +286,14 @@ matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
 operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_param TOKEN_COMMA math_expression TOKEN_COMMA var_or_id_param TOKEN_RPAREN {
                                                                                                                                                             if (dynamic_cast<Name*>($1)->getName() == "BISECTIONROOT")
                                                                                                                                                             {
+                                                                                                                                                                $1->destroy();
+                                                                                                                                                                delete $1;
                                                                                                                                                                 $$ = new FindRootBisection($3, $5, $7);
                                                                                                                                                             }
                                                                                                                                                             else
                                                                                                                                                             {
+                                                                                                                                                                $1->destroy();
+                                                                                                                                                                delete $1;
                                                                                                                                                                 $$ = new Integral($3, $5, $7);
                                                                                                                                                             }
                                                                                                                                                         }

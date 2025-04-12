@@ -10,12 +10,16 @@ vec5 = [4,19,1];
 ma2 = {vec4,vec5};
 
 mul = ma1 * ma2;
-
+display(mul);
 vec6 = [2,3];
 vec7 = [4,19];
 
 ma3 = {vec6,vec7};
 
 mul2 = ma2 * ma3;
+display(mul2);
 
 mul3 = 10*ma3;
+display(mul3);
+
+display(8*mul3);

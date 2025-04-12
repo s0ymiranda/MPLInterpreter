@@ -71,6 +71,14 @@ public:
     std::string toString() const noexcept;
 };
 
+class Invalid : public Unit
+{
+public:
+    Invalid();
+    Expression* eval(Environment& env) const override;
+    std::string toString() const noexcept;
+};
+
 class Number : public Value
 {
 protected:
@@ -259,10 +267,14 @@ class Vector : public Value
 protected:
     std::vector<Expression*> vectorExpression;
 public:
-    Vector(std::vector<Expression*> _vectorExpression);
+    Vector(std::vector<Expression*>& _vectorExpression);
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     std::vector<Expression*> getVectorExpression() const;
+    size_t size()
+    {
+        return vectorExpression.size();
+    }
     void destroy() noexcept override;
 };
 
@@ -271,10 +283,14 @@ class Matrix : public Value
 protected:
     std::vector<Expression*> matrixExpression;
 public:
-    Matrix(std::vector<Expression*> _matrixExpression);
+    Matrix(std::vector<Expression*>& _matrixExpression);
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
     std::vector<Expression*> getMatrixExpression() const;
+    size_t size()
+    {
+        return matrixExpression.size();
+    }
     void destroy() noexcept override;
 };
 
@@ -282,6 +298,7 @@ class InverseMatrix : public Value
 {
 private:
     Expression* matrix;
+    Expression* gauss(std::vector<std::vector<Expression*>>) const;
 public:
     InverseMatrix(Expression* _matrix);
     Expression* eval(Environment& env) const override;
@@ -293,6 +310,7 @@ class MatrixLU : public Value
 {
 private:
     Expression* matrix;
+    Expression* lowerUpperDecomposition(std::vector<std::vector<Expression*>> matrixExpression) const;
 public:
     MatrixLU(Expression* _matrix);
     Expression* eval(Environment& env) const override;
@@ -304,6 +322,7 @@ class TridiagonalMatrix : public Value
 {
 private:
     Expression* matrix;
+    Expression* tridiagonal(std::vector<std::vector<Expression*>> matrix) const;
 public:
     TridiagonalMatrix(Expression* _matrix);
     Expression* eval(Environment& env) const override;
@@ -314,6 +333,9 @@ class RealEigenvalues : public Value
 {
 private:
     Expression* matrix;
+    void determ(std::vector<double> auxialiaryVector, std::vector<std::vector<double>> answerMatrix, double x, double& middle, size_t l) const;
+    void bisec(std::vector<double> auxialiaryVector, std::vector<std::vector<double>> answerMatrix, double startInterval, double endInterval, double& middlePoint, size_t l) const;
+    Expression* eigenvalues(std::vector<std::vector<Expression*>> matrix) const;
 public:
     RealEigenvalues(Expression* _matrix);
     Expression* eval(Environment& env) const override;
@@ -345,6 +367,7 @@ private:
     Expression* interval;
     Expression* function;
     Expression* variable;
+    Expression* simpsonMethod(double a, double b, int n, Expression* function, Environment& env, Variable* variable) const;
 public:
     Integral(Expression* _interval, Expression* _function, Expression* _variable);
     Expression* eval(Environment& env) const override;
@@ -371,6 +394,7 @@ private:
     Expression* initialValue;
     Expression* tFinal;
     Expression* variable;
+    Expression* rungekuttaMethod(double t, double x, double f, double h, Expression* function, Environment& env, Variable* variable) const;
 public:
     ODEFirstOrderInitialValues(Expression* _funct, Expression* _initialValue, Expression* _tFinal, Expression* _variable);
     Expression* eval(Environment& env) const override;
@@ -385,6 +409,7 @@ private:
     Expression* function;
     Expression* variable;
     Expression* iterationLimit;
+    Expression* bisectionMethod(Number* left, Number* right, Expression* function, Environment& env, Variable* _variable, Number* _iterationLimit) const;
 public:
     FindRootBisection(Expression* _interval, Expression* _function, Expression* _variable, Expression* _iterationLimit = new Number(100));
     Expression* eval(Environment& env) const override;

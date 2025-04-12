@@ -11,8 +11,10 @@ vec6 = [3,2,5];
 ma2 = {vec4,vec5,vec6};
 
 m1 = ma1 / ma2;
+display(m1);
 
 m2 = ma1 / ma1;
+display(m2);
 
 m3 = ma1 / 10;
-
+display(m3);

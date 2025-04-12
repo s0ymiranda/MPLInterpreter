@@ -25,4 +25,5 @@ enum class DataType
 
 class Expression;
 
-using Environment = std::forward_list<std::pair<std::string_view, Expression*>>;
+using Environment = std::forward_list<std::pair<std::string, Expression*>>;
+//using Environment = std::forward_list<std::pair<std::string_view, Expression*>>;
