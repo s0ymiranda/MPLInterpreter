@@ -33,7 +33,6 @@ int main(int argc, char* argv[])
     {
         printf("Parse successful! AST: \n");
         printf("====================== \n");
-        // printf("%s", parser_result->toString().c_str());
         auto env = Environment();
         auto exs = dynamic_cast<ExpressionList*>(parser_result);
         printf("List size: %lu\n", exs->size());
@@ -48,10 +47,6 @@ int main(int argc, char* argv[])
                 t.second->destroy();
                 delete t.second;
                 t.second = nullptr;
-            }
-            else
-            {
-                std::cout << "NULLPTR\n";
             }
         }
     }

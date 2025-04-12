@@ -1698,20 +1698,6 @@ Expression* RealEigenvalues::eigenvalues(std::vector<std::vector<Expression*>> m
         newVector.push_back(new Number(eigenvaluesIterations[size][i]));
     }
 
-    // for (auto& vec : matrix)
-    // {
-    //     for (auto& exp : vec)
-    //     {
-    //         if (exp != nullptr)
-    //         {
-    //             exp->destroy();
-    //             delete exp;
-    //         }
-    //     }
-    //     vec.clear();
-    // }
-    // matrix.clear();
-
     return new Vector(newVector);
 }
 Expression* RealEigenvalues::eval(Environment& env) const
