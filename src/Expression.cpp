@@ -197,7 +197,7 @@ Expression* Addition::eval(Environment& env) const
             return new Impossible();
         }
 
-        auto expressionDeleter = [](Expression* exp)
+        auto expressionDeleter = [] (Expression* exp)
         {
             if (exp)
             {
@@ -478,9 +478,9 @@ Expression* Multiplication::eval(Environment& env) const
                 newVec.push_back(std::move(acc));
             }
             std::vector<Expression*> rawVec;
-            for (auto& ptr : newVec)
+            for (auto& exp : newVec)
             {
-                rawVec.push_back(ptr.release());
+                rawVec.push_back(exp.release());
             }
             newMatrix.push_back(std::unique_ptr<Expression>(new Vector(rawVec)));
         }
@@ -546,8 +546,7 @@ Expression* Multiplication::eval(Environment& env) const
             rawMatrix.push_back(vec.get());
         }
 
-        Matrix tempMatrix(rawMatrix);
-        auto result = tempMatrix.eval(env);
+        auto result = (Matrix(rawMatrix)).eval(env);
 
         num->destroy();
         delete num;
