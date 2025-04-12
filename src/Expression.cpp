@@ -383,10 +383,10 @@ Expression* Multiplication::eval(Environment& env) const
             delete exp2;
             return new Impossible();
         }
+        auto first_row_mat2 = dynamic_cast<Vector*>(matrix2[0]);
         for (size_t i = 0; i < matrix1.size(); ++i)
         {
             std::vector<Expression*> newVec;
-            auto first_row_mat2 = dynamic_cast<Vector*>(matrix2[0]);
 
             auto n_row_matrix1 = dynamic_cast<Vector*>(matrix1[i]);
 
@@ -399,12 +399,26 @@ Expression* Multiplication::eval(Environment& env) const
                     Expression* mul = new Multiplication(n_row_matrix1->getVectorExpression()[k], k_row_matrix2->getVectorExpression()[j]);
                     Expression* temp = new Addition(acc, mul);
                     acc = temp;
+
+                    //mul->destroy();
+                    //delete mul;
                 }
                 newVec.push_back(acc);
+                //acc->destroy();
+                //delete acc;
             }
             newMatrix.push_back(new Vector(newVec));
         }
-        return (Matrix(newMatrix)).eval(env);
+        auto result = (Matrix(newMatrix)).eval(env);
+        for (Expression* vec : newMatrix)
+        {
+            vec->destroy();
+            delete vec;
+        }
+        newMatrix.clear();
+        //delete exp1;
+        //delete exp2;
+        return result;
     }
 
     if (element1->getDataType() == DataType::Number && element2->getDataType() == DataType::Matrix)
@@ -418,11 +432,21 @@ Expression* Multiplication::eval(Environment& env) const
             std::vector<Expression*> new_vec{};
             for (Expression* exp : v->getVectorExpression())
             {
-                new_vec.push_back(new Multiplication(num, exp));
+                new_vec.push_back(new Multiplication(new Number(num->getNumber()), exp));
             }
             newMatrix.push_back(new Vector(new_vec));
         }
-        return ((Matrix(newMatrix)).eval(env));
+        num->destroy();
+        delete num;
+        auto result = ((Matrix(newMatrix)).eval(env));
+        for (Expression* vec : newMatrix)
+        {
+            vec->destroy();
+            delete vec;
+        }
+        newMatrix.clear();
+
+        return result;
     }
 
     auto num1 = dynamic_cast<Number*>(exp1);
@@ -471,7 +495,7 @@ Expression* Division::eval(Environment& env) const
         auto matrix1 = dynamic_cast<Matrix*>(element1);
         auto matrix2 = dynamic_cast<Matrix*>(element2);
 
-        return (Multiplication(matrix1, new InverseMatrix(matrix2))).eval(env);
+        return (new Multiplication(matrix1, new InverseMatrix(matrix2)));
     }
 
     if (element1->getDataType() == DataType::Matrix && element2->getDataType() == DataType::Number)
@@ -487,7 +511,9 @@ Expression* Division::eval(Environment& env) const
             return new Impossible();
         }
         Expression* newNum = new Number(1/num);
-        return (Multiplication(newNum, matrix1)).eval(env);
+        exp2->destroy();
+        delete exp2;
+        return (new Multiplication(newNum, matrix1));
     }
 
     auto num1 = dynamic_cast<Number*>(exp1);
@@ -502,6 +528,10 @@ Expression* Division::eval(Environment& env) const
     }
     if (std::abs(num2->getNumber()) <= 0.00000001)
     {
+        exp1->destroy();
+        delete exp1;
+        exp2->destroy();
+        delete exp2;
         return new Impossible();
     }
     double result = num1->getNumber() / num2->getNumber();
@@ -509,7 +539,7 @@ Expression* Division::eval(Environment& env) const
     delete exp1;
     exp2->destroy();
     delete exp2;
-    return (Number(result)).eval(env);
+    return (new Number(result));
 }
 
 std::string Division::toString() const noexcept
@@ -1209,7 +1239,10 @@ Expression* InverseMatrix::eval(Environment& env) const
     {
         return new Impossible();
     }
-    return gauss(matrix_to_inverse);
+    auto result = gauss(matrix_to_inverse);
+    evMatrix->destroy();
+    delete evMatrix;
+    return result;
 }
 std::string InverseMatrix::toString() const noexcept
 {
@@ -1321,7 +1354,10 @@ Expression* MatrixLU::eval(Environment& env) const
     {
         return new Impossible();
     }
-    return lowerUpperDecomposition(matrix_to_lower_upper);
+    auto result = lowerUpperDecomposition(matrix_to_lower_upper);
+    evMatrix->destroy();
+    delete evMatrix;
+    return result;
 }
 std::string MatrixLU::toString() const noexcept
 {
@@ -1439,7 +1475,10 @@ Expression* TridiagonalMatrix::eval(Environment& env) const
     {
         return new Impossible();
     }
-    return tridiagonal(matrix_to_tridiagonal);
+    auto result = tridiagonal(matrix_to_tridiagonal);
+    evMatrix->destroy();
+    delete evMatrix;
+    return result;
 }
 std::string TridiagonalMatrix::toString() const noexcept
 {
@@ -1657,6 +1696,8 @@ Expression* Determinant::eval(Environment& env) const
     }
     delete second;
     delete matrixPair;
+    upperMatrix->destroy();
+    delete upperMatrix;
     return new Number(((det < 0) ? -det : det));
 }
 std::string Determinant::toString() const noexcept

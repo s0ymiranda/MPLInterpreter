@@ -21,3 +21,5 @@ display(mul2);
 
 mul3 = 10*ma3;
 display(mul3);
+
+display(8*mul3);

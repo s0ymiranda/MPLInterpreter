@@ -1,4 +1,4 @@
-CXX = g++
+CXX = g++ -O0 -g
 FLEX = flex
 BISON = bison -Wcounterexamples --defines=$(INCLUDE_DIR)/token.h
 
