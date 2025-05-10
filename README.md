@@ -19,6 +19,7 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 1. **Prerequisites:**
    - Ensure you have Flex, Bison and Make installed on your system.
    - Have a C and C++ compiler (such as GCC) available.
+   - To use the interactive interpreter, it is required to install the Readline library. You can do it in Ubuntu just by executing: sudo apt-get install libreadline-dev.
 
 2. **Clone the Repository:**
 
@@ -30,13 +31,17 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
    ```
 
 4. **Run the parser**
-    There is provide a make run, that uses all the files in the samples folder
+    There is provide a make test, that uses all the files in the samples folder
    ```bash
-      make run
+      make test
    ```
    Or run the samples individually:
    ```bash
       ./build/parser /samples/"name of the file"
+   ```
+   If you want to use the interactive interpreter execute: make run:
+   ```bash
+      make run
    ```
 
 
