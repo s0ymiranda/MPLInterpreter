@@ -31,17 +31,17 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
    ```
 
 4. **Run the parser**
-    There is provide a make test, that uses all the files in the samples folder
+    There is provide a make run, that uses the interactive interpreter:
+   ```bash
+      make run
+   ```
+   Also you can run all the files in the samples folder by using make test:
    ```bash
       make test
    ```
    Or run the samples individually:
    ```bash
       ./build/parser /samples/"name of the file"
-   ```
-   If you want to use the interactive interpreter execute: make run:
-   ```bash
-      make run
    ```
 
 
