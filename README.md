@@ -37,7 +37,7 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
    ```
    Also you can run all the files in the samples folder by using make test:
    ```bash
-      make test
+      make mpl
    ```
    Or run the samples individually:
    ```bash
