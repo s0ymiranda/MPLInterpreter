@@ -18,6 +18,6 @@ ode = ODEFIRST(sum,(to,xo),tFinal,var);
 
 display(ode);
 
-ode2 = ODEFIRST(sum,(to,xo),-10,var);
+ode2 = ODEFIRST(sum,(to,xo),LN(1/2),var);
 
 display(ode2);

@@ -260,10 +260,6 @@ vector_or_id_param : vector_expression { $$ = $1; }
                    | TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
                    ;
 
-number_or_id_param : TOKEN_NUMBER { $$ = new Number(strtod(yytext, NULL)); }
-                   | TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
-                   ;
-
 matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new InverseMatrix($3); }
                      | TOKEN_MATRIXLU TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new MatrixLU($3); }
                      | TOKEN_TRIDIAGONAL TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new TridiagonalMatrix($3); }
@@ -285,8 +281,8 @@ operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_par
                                                                                                                                                                 $$ = new Integral($3, $5, $7);
                                                                                                                                                             }
                                                                                                                                                         }
-                         | TOKEN_INTERPOLATE TOKEN_LPAREN vector_or_id_param TOKEN_COMMA number_or_id_param TOKEN_RPAREN { $$ = new Interpolate($3, $5); }
-                         | TOKEN_ODEFIRST TOKEN_LPAREN math_expression TOKEN_COMMA pair_or_id_param TOKEN_COMMA number_or_id_param TOKEN_COMMA id_param TOKEN_RPAREN {  $$ = new ODEFirstOrderInitialValues($3, $5, $7, $9);}
+                         | TOKEN_INTERPOLATE TOKEN_LPAREN vector_or_id_param TOKEN_COMMA math_expression TOKEN_RPAREN { $$ = new Interpolate($3, $5); }
+                         | TOKEN_ODEFIRST TOKEN_LPAREN math_expression TOKEN_COMMA pair_or_id_param TOKEN_COMMA math_expression TOKEN_COMMA id_param TOKEN_RPAREN {  $$ = new ODEFirstOrderInitialValues($3, $5, $7, $9);}
                          ;
 
 function_call : logarithmic_function_call
