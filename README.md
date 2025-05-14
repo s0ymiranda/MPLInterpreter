@@ -41,10 +41,13 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
    ```
    Or run the samples individually:
    ```bash
-      ./build/parser /samples/"name of the file"
+      ./build/mpl samples/"name of the file".mpl
    ```
 
 
 ## Acknowledgements
 For more information about the development and specifications of the Mathematical Programming Language, you can refer to
 - [Mathematical Programming Lenguage Repository](https://github.com/gerardorosetti/programming_languages_project).
+
+For more information about the development and specifications of the Interpreter Mathematical Programming Language, you can read the development document
+- [Interpreter - MPL](https://docs.google.com/document/d/1WaoRi4Mnx79ktCwaNhNpfZGid2FKVRdQkL1OfwEX-Rc/edit?tab=t.0#heading=h.rwigb3anhsnq)

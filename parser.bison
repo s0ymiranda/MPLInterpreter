@@ -27,7 +27,6 @@ Expression* parser_result{nullptr};
 %token TOKEN_SEMICOLON
 %token TOKEN_ASSIGN
 %token TOKEN_NUMBER
-%token TOKEN_VAR
 %token TOKEN_IDENTIFIER
 %token TOKEN_ADD
 %token TOKEN_SUBSTRACT
@@ -94,7 +93,6 @@ display_expression : TOKEN_DISPLAY TOKEN_LPAREN math_expression TOKEN_RPAREN TOK
                    ;
 
 assignment_expression : TOKEN_IDENTIFIER TOKEN_ASSIGN math_expression TOKEN_SEMICOLON { $$ = new Assigment(new Name(std::string(assing_id)), $3);}
-                      | TOKEN_VAR TOKEN_ASSIGN numeric_expression TOKEN_SEMICOLON { $$ = new Assigment(new Variable(assing_variable), $3);}
                       ;
 
 math_expression : math_expression TOKEN_ADD term { $$ = new Addition($1, $3); }
@@ -108,18 +106,9 @@ term : term TOKEN_MULTIPLY factor { $$ = new Multiplication($1, $3); }
      | factor { $$ = $1; }
      ;
 
-numeric_expression : TOKEN_NUMBER {  $$ = new Number(strtod(yytext, NULL)); }
-                   | trigonometric_function_call
-                   | logarithmic_function_call
-                   | root_function_call
-                   | TOKEN_PI { $$ = new PI(); }
-                   | TOKEN_EULER { $$ = new EULER(); }
-                   ;
-
 factor : TOKEN_NUMBER {  $$ = new Number(strtod(yytext, NULL)); }
        | TOKEN_PI { $$ = new PI(); }
        | TOKEN_EULER { $$ = new EULER(); }
-       | TOKEN_VAR {  $$ = new Variable(yytext[1]); }
        | TOKEN_IDENTIFIER {  $$ = new Name(std::string(id)); }
        | TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = $2; }
        | pair_expression
@@ -260,9 +249,8 @@ pair_or_id_param : pair_expression { $$ = $1; }
                  | TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
                  ;
 
-var_or_id_param : TOKEN_VAR { $$ = new Variable(yytext[1]); }
-                | TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
-                ;
+id_param :  TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
+         ;
 
 integral_or_bisectionroot : TOKEN_BISECTIONROOT { $$ = new Name("BISECTIONROOT"); }
                           | TOKEN_INTEGRAL { $$ = new Name("INTEGRAL"); }
@@ -283,7 +271,7 @@ matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
                      | TOKEN_DETERMINANT TOKEN_LPAREN matrix_func_param TOKEN_RPAREN { $$ = new Determinant($3); }
                      ;
 
-operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_param TOKEN_COMMA math_expression TOKEN_COMMA var_or_id_param TOKEN_RPAREN {
+operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_param TOKEN_COMMA math_expression TOKEN_COMMA id_param TOKEN_RPAREN {
                                                                                                                                                             if (dynamic_cast<Name*>($1)->getName() == "BISECTIONROOT")
                                                                                                                                                             {
                                                                                                                                                                 $1->destroy();
@@ -298,7 +286,7 @@ operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_par
                                                                                                                                                             }
                                                                                                                                                         }
                          | TOKEN_INTERPOLATE TOKEN_LPAREN vector_or_id_param TOKEN_COMMA number_or_id_param TOKEN_RPAREN { $$ = new Interpolate($3, $5); }
-                         | TOKEN_ODEFIRST TOKEN_LPAREN math_expression TOKEN_COMMA pair_or_id_param TOKEN_COMMA number_or_id_param TOKEN_COMMA var_or_id_param TOKEN_RPAREN {  $$ = new ODEFirstOrderInitialValues($3, $5, $7, $9);}
+                         | TOKEN_ODEFIRST TOKEN_LPAREN math_expression TOKEN_COMMA pair_or_id_param TOKEN_COMMA number_or_id_param TOKEN_COMMA id_param TOKEN_RPAREN {  $$ = new ODEFirstOrderInitialValues($3, $5, $7, $9);}
                          ;
 
 function_call : logarithmic_function_call

@@ -10,9 +10,9 @@ display(ma1);
 print(Tridiagonal);
 display(trid);
 
-print(l);
+print(_________________);
 print(Prueba2);
-print(l);
+print(_________________);
 vec4 = [4,3,2,1];
 vec5 = [3,3,2,1];
 vec6 = [2,2,2,1];

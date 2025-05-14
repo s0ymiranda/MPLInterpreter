@@ -31,11 +31,8 @@ int main(int argc, char* argv[])
 
     if (result == 0)
     {
-        printf("Parse successful! AST: \n");
-        printf("====================== \n");
         auto env = Environment();
         auto exs = dynamic_cast<ExpressionList*>(parser_result);
-        printf("List size: %lu\n", exs->size());
         std::unique_ptr<Expression> test(exs->eval(env));
         printf("%s", test->toString().c_str());
         test->destroy();

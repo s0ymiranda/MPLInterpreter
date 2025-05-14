@@ -114,31 +114,6 @@ std::string EULER::toString() const noexcept
     return "e";
 }
 
-// Variable
-Variable::Variable(char _variable) : Value(DataType::Variable), variable{_variable} {}
-Expression* Variable::eval(Environment& env) const
-{
-    if (!env.empty())
-    {
-        for (auto pair : env)
-        {
-            if (pair.first == std::string{variable})
-            {
-                return pair.second->eval(env);
-            }
-        }
-    }
-    return new Variable(variable);
-}
-std::string Variable::toString() const noexcept
-{
-    return std::string{variable};
-}
-char Variable::getVariable() const
-{
-    return variable;
-}
-
 //Name
 Name::Name(std::string_view _name) : Value(DataType::Name), name(_name) {}
 Expression* Name::eval(Environment& env) const
@@ -178,7 +153,7 @@ Expression* Addition::eval(Environment& env) const
         return new Addition(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    if (element1->getDataType() == DataType::Name || element2->getDataType() == DataType::Name)
     {
         return new Addition(exp1, exp2);
     }
@@ -306,7 +281,7 @@ Expression* Substraction::eval(Environment& env) const
         return new Substraction(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    if (element1->getDataType() == DataType::Name || element2->getDataType() == DataType::Name)
     {
         return new Substraction(exp1, exp2);
     }
@@ -434,7 +409,7 @@ Expression* Multiplication::eval(Environment& env) const
         return new Multiplication(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    if (element1->getDataType() == DataType::Name || element2->getDataType() == DataType::Name)
     {
         return new Multiplication(exp1, exp2);
     }
@@ -592,7 +567,7 @@ Expression* Division::eval(Environment& env) const
         return new Division(exp1, exp2);
     }
 
-    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    if (element1->getDataType() == DataType::Name || element2->getDataType() == DataType::Name)
     {
         return new Division(exp1, exp2);
     }
@@ -665,7 +640,7 @@ Expression* Power::eval(Environment& env) const
     {
         return new Power(exp1, exp2);
     }
-    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    if (element1->getDataType() == DataType::Name || element2->getDataType() == DataType::Name)
     {
         return new Power(exp1, exp2);
     }
@@ -704,7 +679,7 @@ Expression* NaturalLogarithm::eval(Environment& env) const
     {
         return new NaturalLogarithm(exp);
     }
-    if(element->getDataType() == DataType::Variable)
+    if(element->getDataType() == DataType::Name)
     {
         return new NaturalLogarithm(exp);
     }
@@ -742,7 +717,7 @@ Expression* Logarithm::eval(Environment& env) const
     {
         return new Logarithm(exp1, exp2);
     }
-    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    if (element1->getDataType() == DataType::Name || element2->getDataType() == DataType::Name)
     {
         return new Logarithm(exp1, exp2);
     }
@@ -786,7 +761,7 @@ Expression* SquareRoot::eval(Environment& env) const
     {
         return new SquareRoot(exp);
     }
-    if(element->getDataType() == DataType::Variable)
+    if(element->getDataType() == DataType::Name)
     {
         return new SquareRoot(exp);
     }
@@ -824,7 +799,7 @@ Expression* Root::eval(Environment& env) const
     {
         return new Root(exp1, exp2);
     }
-    if (element1->getDataType() == DataType::Variable || element2->getDataType() == DataType::Variable)
+    if (element1->getDataType() == DataType::Name || element2->getDataType() == DataType::Name)
     {
         return new Root(exp1, exp2);
     }
@@ -868,7 +843,7 @@ Expression* Sine::eval(Environment& env) const
     {
         return new SquareRoot(exp);
     }
-    if(element->getDataType() == DataType::Variable)
+    if(element->getDataType() == DataType::Name)
     {
         return new SquareRoot(exp);
     }
@@ -904,7 +879,7 @@ Expression* Cosine::eval(Environment& env) const
     {
         return new SquareRoot(exp);
     }
-    if(element->getDataType() == DataType::Variable)
+    if(element->getDataType() == DataType::Name)
     {
         return new SquareRoot(exp);
     }
@@ -940,7 +915,7 @@ Expression* Tangent::eval(Environment& env) const
     {
         return new SquareRoot(exp);
     }
-    if(element->getDataType() == DataType::Variable)
+    if(element->getDataType() == DataType::Name)
     {
         return new SquareRoot(exp);
     }
@@ -976,7 +951,7 @@ Expression* Cotangent::eval(Environment& env) const
     {
         return new SquareRoot(exp);
     }
-    if(element->getDataType() == DataType::Variable)
+    if(element->getDataType() == DataType::Name)
     {
         return new SquareRoot(exp);
     }
@@ -1828,7 +1803,7 @@ std::string Function::toString() const noexcept
 
 //Integral
 Integral::Integral(Expression* _interval, Expression* _function, Expression* _variable) : interval(_interval), function(_function), variable(_variable) {}
-Expression* Integral::simpsonMethod(double a, double b, int n, Expression* function, Environment& env, Variable* _variable) const
+Expression* Integral::simpsonMethod(double a, double b, int n, Expression* function, Environment& env, Name* _variable) const
 {
     double s = 0.0;
     double ss = 0.0;
@@ -1840,7 +1815,7 @@ Expression* Integral::simpsonMethod(double a, double b, int n, Expression* funct
         {
             double x = a + h * i;
             double w = (i == 0 || i == 3) ? 1 : 3;
-            env.push_front(std::make_pair(std::string{_variable->getVariable()}, new Number(x)));
+            env.push_front(std::make_pair(_variable->getName(), new Number(x)));
             auto re = function->eval(env);
             Number* funcResult = dynamic_cast<Number*>(re);
             if (funcResult == nullptr)
@@ -1869,7 +1844,7 @@ Expression* Integral::simpsonMethod(double a, double b, int n, Expression* funct
         {
             w = 1;
         }
-        env.push_front(std::make_pair(std::string{_variable->getVariable()}, new Number(x)));
+        env.push_front(std::make_pair(_variable->getName(), new Number(x)));
         auto re = function->eval(env);
         Number* funcResult = dynamic_cast<Number*>(re);
         if (funcResult == nullptr)
@@ -1912,7 +1887,7 @@ Expression* Integral::eval(Environment& env) const
     double b = tf->getNumber();
 
     auto va = variable->eval(env);
-    auto var = dynamic_cast<Variable*>(va);
+    auto var = dynamic_cast<Name*>(va);
     if (var == nullptr)
     {
         in->destroy();
@@ -2078,12 +2053,12 @@ void Interpolate::destroy() noexcept
 
 //ODE First
 ODEFirstOrderInitialValues::ODEFirstOrderInitialValues(Expression* _funct, Expression* _initialValue, Expression* _tFinal, Expression* _variable) : funct(_funct), initialValue(_initialValue), tFinal(_tFinal), variable(_variable) {}
-Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, double f, double h, Expression* function, Environment& env, Variable* variable) const
+Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, double f, double h, Expression* function, Environment& env, Name* variable) const
 {
     double t = _t, x = _x, tn = f;
     while(t < tn)
     {
-        env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x)));
+        env.push_front(std::make_pair(variable->getName(), new Number(x)));
         auto ev_func1 = function->eval(env);
         auto num1 = dynamic_cast<Number*>(ev_func1);
 
@@ -2094,7 +2069,7 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
         }
         double k1 = h * num1->getNumber();
 
-        env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x + 0.5 * k1)));
+        env.push_front(std::make_pair(variable->getName(), new Number(x + 0.5 * k1)));
         auto ev_func2 = function->eval(env);
         auto num2 = dynamic_cast<Number*>(ev_func2);
 
@@ -2105,7 +2080,7 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
 
         double k2 = h * num2->getNumber();
 
-        env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x + 0.5 * k2)));
+        env.push_front(std::make_pair(variable->getName(), new Number(x + 0.5 * k2)));
         auto ev_func3 = function->eval(env);
         auto num3 = dynamic_cast<Number*>(ev_func3);
 
@@ -2115,7 +2090,7 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
         }
         double k3 = h * num3->getNumber();
 
-        env.push_front(std::make_pair(std::string{variable->getVariable()}, new Number(x + k3)));
+        env.push_front(std::make_pair(variable->getName(), new Number(x + k3)));
         auto ev_func4 = function->eval(env);
         auto num4 = dynamic_cast<Number*>(ev_func4);
 
@@ -2183,7 +2158,7 @@ Expression* ODEFirstOrderInitialValues::eval(Environment& env) const
         return new Impossible();
     }
     auto va = variable->eval(env);
-    auto var = dynamic_cast<Variable*>(va);
+    auto var = dynamic_cast<Name*>(va);
     if (var == nullptr)
     {
         ini->destroy();
@@ -2257,12 +2232,12 @@ void ODEFirstOrderInitialValues::destroy() noexcept
 }
 
 FindRootBisection::FindRootBisection(Expression* _interval, Expression* _function, Expression* _variable, Expression* _iterationLimit) : interval(_interval), function(_function), variable(_variable), iterationLimit(_iterationLimit) {}
-Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expression* evFunction, Environment& env, Variable* _variable, Number* _iterationLimit) const
+Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expression* evFunction, Environment& env, Name* _variable, Number* _iterationLimit) const
 {
     double a = left->getNumber(), c = right->getNumber(), ep = 0.000001;
     size_t il = _iterationLimit->getNumber();
 
-    std::string var = std::string{_variable->getVariable()};
+    std::string var = _variable->getName();
 
     env.push_front(std::make_pair(var, left));
     auto _ya = dynamic_cast<Number*>(evFunction->eval(env));
@@ -2376,7 +2351,7 @@ Expression* FindRootBisection::eval(Environment& env) const
         return new Invalid();
     }
     auto v = variable->eval(env);
-    auto var = dynamic_cast<Variable*>(v);
+    auto var = dynamic_cast<Name*>(v);
 
     if (var == nullptr)
     {
@@ -2509,12 +2484,6 @@ Expression* Assigment::eval(Environment& env) const
         return new Unit();
     }
 
-    Variable* leftVar = dynamic_cast<Variable*>(leftExpression);
-    if (leftVar != nullptr)
-    {
-        env.push_front(std::make_pair(std::string{leftVar->getVariable()}, rightExpression->eval(env)));
-        return new Unit();
-    }
     return new Invalid();
 }
 std::string Assigment::toString() const noexcept

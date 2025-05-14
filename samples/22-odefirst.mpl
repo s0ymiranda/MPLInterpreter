@@ -4,7 +4,6 @@ xo = 0;
 num1 = 3;
 num2 = 125;
 
-var = 'x';
 
 div = num1/num2;
 mul = div * var;

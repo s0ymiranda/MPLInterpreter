@@ -15,7 +15,6 @@ DIGIT      [0-9]
 LETTER     [A-Za-z]
 IDENTIFIER (_|{LETTER})({DIGIT}|{LETTER}|_)*
 NUMBER     -?[0-9]+(\.[0-9]+)?([eE]-?[0-9]+)?
-VARIABLE   '{LETTER}'
 
 %%
 {SPACE}             {
@@ -77,16 +76,6 @@ VARIABLE   '{LETTER}'
                         num_column += yyleng;
                         return TOKEN_NUMBER;
                     }
-{VARIABLE}          {
-                        num_column += yyleng;
-                        if (take)
-                        {
-                            assing_variable = yytext[1];
-                            take = false;
-                        }
-                        return TOKEN_VAR;
-                    }
-
 "+"                 {
                         num_column += yyleng;
                         return TOKEN_ADD;
