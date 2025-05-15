@@ -117,6 +117,14 @@ public:
     std::string getName() const noexcept;
 };
 
+class Negation : public UnaryExpression
+{
+public:
+    using UnaryExpression::UnaryExpression;
+    Expression* eval(Environment& env) const override;
+    std::string toString() const noexcept override;
+};
+
 class Addition : public BinaryExpression
 {
 public:

@@ -55,7 +55,7 @@ Expression* parser_result{nullptr};
 
 %%
 
-program : expressions_list                                          {   parser_result = $1;}
+program : expressions_list                                          { parser_result = $1; }
         ;
 
 expressions_list : expression expressions_list                      {
@@ -102,20 +102,27 @@ math_expression : math_expression TOKEN_ADD term { $$ = new Addition($1, $3); }
 
 term : term TOKEN_MULTIPLY factor { $$ = new Multiplication($1, $3); }
      | term TOKEN_DIVIDE factor { $$ = new Division($1, $3); }
-     | term TOKEN_POW factor { $$ = new Power($1, $3); }
      | factor { $$ = $1; }
      ;
 
-factor : TOKEN_NUMBER {  $$ = new Number(strtod(yytext, NULL)); }
-       | TOKEN_PI { $$ = new PI(); }
-       | TOKEN_EULER { $$ = new EULER(); }
-       | TOKEN_IDENTIFIER {  $$ = new Name(std::string(id)); }
-       | TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = $2; }
-       | pair_expression
-       | vector_expression
-       | matrix_expression
-       | function_call
+factor : TOKEN_SUBSTRACT factor { $$ = new Negation($2); }
+       | power_or_primary { $$ = $1; }
        ;
+
+power_or_primary : primary TOKEN_POW power_or_primary { $$ = new Power($1, $3); }
+      | primary { $$ = $1; }
+      ;
+
+primary : TOKEN_NUMBER { $$ = new Number(strtod(yytext, NULL)); }
+        | TOKEN_PI { $$ = new PI(); }
+        | TOKEN_EULER { $$ = new EULER(); }
+        | TOKEN_IDENTIFIER { $$ = new Name(std::string(id)); }
+        | TOKEN_LPAREN math_expression TOKEN_RPAREN { $$ = $2; }
+        | pair_expression
+        | vector_expression
+        | matrix_expression
+        | function_call
+        ;
 
 pair_expression : TOKEN_LPAREN math_expression TOKEN_COMMA math_expression TOKEN_RPAREN {   $$ = new Pair($2, $4);}
                 ;

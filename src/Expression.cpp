@@ -139,6 +139,21 @@ std::string Name::getName() const noexcept
     return name;
 }
 
+// Negation
+Expression* Negation::eval(Environment& env) const
+{
+    auto negative = new Number(-1);
+    auto result = Multiplication(negative, expression).eval(env);
+    negative->destroy();
+    delete negative;
+    negative = nullptr;
+    return result;
+}
+std::string Negation::toString() const noexcept
+{
+    return "-" + expression->toString();
+}
+
 // Addition
 Expression* Addition::eval(Environment& env) const
 {

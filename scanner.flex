@@ -14,7 +14,7 @@ SPACE      [ \t\n\r]+
 DIGIT      [0-9]
 LETTER     [A-Za-z]
 IDENTIFIER (_|{LETTER})({DIGIT}|{LETTER}|_)*
-NUMBER     -?[0-9]+(\.[0-9]+)?([eE]-?[0-9]+)?
+NUMBER     [0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?
 
 %%
 {SPACE}             {
@@ -197,5 +197,4 @@ NUMBER     -?[0-9]+(\.[0-9]+)?([eE]-?[0-9]+)?
                         yy_fatal_error(buffer);
                     }
 %%
-
 int yywrap() { return 1; }
