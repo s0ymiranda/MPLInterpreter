@@ -413,57 +413,219 @@ vector_or_id_param : vector_expression { $$ = $1; }
                    ;
 
 matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN {
-                                                                                    std::vector<Expression*> matrix{};
-                                                                                    ExpressionList* list = dynamic_cast<ExpressionList*>($3);
-                                                                                    if (list)
+                                                                                    Name* name = dynamic_cast<Name*>($3);
+                                                                                    if (name != nullptr)
                                                                                     {
-                                                                                        for (auto expr : list->getVectorExpression())
+                                                                                        Expression* e = new InverseMatrix($3);
+                                                                                        pointers.emplace(e);
+                                                                                        $$ = e;
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        std::vector<Expression*> matrix{};
+                                                                                        ExpressionList* list = dynamic_cast<ExpressionList*>($3);
+                                                                                        if (list)
                                                                                         {
-                                                                                            Vector* vec = dynamic_cast<Vector*>(expr);
-                                                                                            if (vec)
+                                                                                            for (auto expr : list->getVectorExpression())
                                                                                             {
-                                                                                                matrix.push_back(vec);
-                                                                                            }
-                                                                                            else
-                                                                                            {
-                                                                                                Name* name = dynamic_cast<Name*>(expr);
-                                                                                                if (name)
+                                                                                                Vector* vec = dynamic_cast<Vector*>(expr);
+                                                                                                if (vec)
                                                                                                 {
-                                                                                                    matrix.push_back(name);
+                                                                                                    matrix.push_back(vec);
+                                                                                                }
+                                                                                                else
+                                                                                                {
+                                                                                                    Name* name = dynamic_cast<Name*>(expr);
+                                                                                                    if (name)
+                                                                                                    {
+                                                                                                        matrix.push_back(name);
+                                                                                                    }
                                                                                                 }
                                                                                             }
                                                                                         }
+                                                                                        if (pointers.find($3) != pointers.end())
+                                                                                        {
+                                                                                            pointers.erase($3);
+                                                                                        }
+                                                                                        delete $3;
+                                                                                        Expression* e = new Matrix(matrix);
+                                                                                        pointers.emplace(e);
+                                                                                        Expression* e2 = new InverseMatrix(e);
+                                                                                        pointers.emplace(e2);
+                                                                                        $$ = e2;
                                                                                     }
-                                                                                    if (pointers.find($3) != pointers.end())
-                                                                                    {
-                                                                                        pointers.erase($3);
-                                                                                    }
-                                                                                    delete $3;
-                                                                                    Expression* e = new Matrix(matrix);
-                                                                                    pointers.emplace(e);
-                                                                                    Expression* e2 = new InverseMatrix(e);
-                                                                                    pointers.emplace(e2);
-                                                                                    $$ = e2;
                                                                                  }
                      | TOKEN_MATRIXLU TOKEN_LPAREN matrix_func_param TOKEN_RPAREN {
-                                                                                    Expression* e = new MatrixLU($3);
-                                                                                    pointers.emplace(e);
-                                                                                    $$ = e;
+                                                                                    Name* name = dynamic_cast<Name*>($3);
+                                                                                    if (name != nullptr)
+                                                                                    {
+                                                                                        Expression* e = new MatrixLU($3);
+                                                                                        pointers.emplace(e);
+                                                                                        $$ = e;
+                                                                                    }
+                                                                                    else
+                                                                                    {
+                                                                                        std::vector<Expression*> matrix{};
+                                                                                        ExpressionList* list = dynamic_cast<ExpressionList*>($3);
+                                                                                        if (list)
+                                                                                        {
+                                                                                            for (auto expr : list->getVectorExpression())
+                                                                                            {
+                                                                                                Vector* vec = dynamic_cast<Vector*>(expr);
+                                                                                                if (vec)
+                                                                                                {
+                                                                                                    matrix.push_back(vec);
+                                                                                                }
+                                                                                                else
+                                                                                                {
+                                                                                                    Name* name = dynamic_cast<Name*>(expr);
+                                                                                                    if (name)
+                                                                                                    {
+                                                                                                        matrix.push_back(name);
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                        if (pointers.find($3) != pointers.end())
+                                                                                        {
+                                                                                            pointers.erase($3);
+                                                                                        }
+                                                                                        delete $3;
+                                                                                        Expression* e = new Matrix(matrix);
+                                                                                        pointers.emplace(e);
+                                                                                        Expression* e2 = new MatrixLU(e);
+                                                                                        pointers.emplace(e2);
+                                                                                        $$ = e2;
+                                                                                    }
                                                                                   }
                      | TOKEN_TRIDIAGONAL TOKEN_LPAREN matrix_func_param TOKEN_RPAREN {
-                                                                                        Expression* e = new TridiagonalMatrix($3);
-                                                                                        pointers.emplace(e);
-                                                                                        $$ = e;
-                                                                                     }
-                     | TOKEN_REALEIGENVALUES TOKEN_LPAREN matrix_func_param TOKEN_RPAREN {
-                                                                                            Expression* e = new RealEigenvalues($3);
+                                                                                        Name* name = dynamic_cast<Name*>($3);
+                                                                                        if (name != nullptr)
+                                                                                        {
+                                                                                            Expression* e = new TridiagonalMatrix($3);
                                                                                             pointers.emplace(e);
                                                                                             $$ = e;
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            std::vector<Expression*> matrix{};
+                                                                                            ExpressionList* list = dynamic_cast<ExpressionList*>($3);
+                                                                                            if (list)
+                                                                                            {
+                                                                                                for (auto expr : list->getVectorExpression())
+                                                                                                {
+                                                                                                    Vector* vec = dynamic_cast<Vector*>(expr);
+                                                                                                    if (vec)
+                                                                                                    {
+                                                                                                        matrix.push_back(vec);
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        Name* name = dynamic_cast<Name*>(expr);
+                                                                                                        if (name)
+                                                                                                        {
+                                                                                                            matrix.push_back(name);
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                            if (pointers.find($3) != pointers.end())
+                                                                                            {
+                                                                                                pointers.erase($3);
+                                                                                            }
+                                                                                            delete $3;
+                                                                                            Expression* e = new Matrix(matrix);
+                                                                                            pointers.emplace(e);
+                                                                                            Expression* e2 = new TridiagonalMatrix(e);
+                                                                                            pointers.emplace(e2);
+                                                                                            $$ = e2;
+                                                                                        }
+                                                                                     }
+                     | TOKEN_REALEIGENVALUES TOKEN_LPAREN matrix_func_param TOKEN_RPAREN {
+                                                                                            Name* name = dynamic_cast<Name*>($3);
+                                                                                            if (name != nullptr)
+                                                                                            {
+                                                                                                Expression* e = new RealEigenvalues($3);
+                                                                                                pointers.emplace(e);
+                                                                                                $$ = e;
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                std::vector<Expression*> matrix{};
+                                                                                                ExpressionList* list = dynamic_cast<ExpressionList*>($3);
+                                                                                                if (list)
+                                                                                                {
+                                                                                                    for (auto expr : list->getVectorExpression())
+                                                                                                    {
+                                                                                                        Vector* vec = dynamic_cast<Vector*>(expr);
+                                                                                                        if (vec)
+                                                                                                        {
+                                                                                                            matrix.push_back(vec);
+                                                                                                        }
+                                                                                                        else
+                                                                                                        {
+                                                                                                            Name* name = dynamic_cast<Name*>(expr);
+                                                                                                            if (name)
+                                                                                                            {
+                                                                                                                matrix.push_back(name);
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                                if (pointers.find($3) != pointers.end())
+                                                                                                {
+                                                                                                    pointers.erase($3);
+                                                                                                }
+                                                                                                delete $3;
+                                                                                                Expression* e = new Matrix(matrix);
+                                                                                                pointers.emplace(e);
+                                                                                                Expression* e2 = new RealEigenvalues(e);
+                                                                                                pointers.emplace(e2);
+                                                                                                $$ = e2;
+                                                                                            }
                                                                                          }
                      | TOKEN_DETERMINANT TOKEN_LPAREN matrix_func_param TOKEN_RPAREN {
-                                                                                        Expression* e = new Determinant($3);
-                                                                                        pointers.emplace(e);
-                                                                                        $$ = e;
+                                                                                        Name* name = dynamic_cast<Name*>($3);
+                                                                                        if (name != nullptr)
+                                                                                        {
+                                                                                            Expression* e = new Determinant($3);
+                                                                                            pointers.emplace(e);
+                                                                                            $$ = e;
+                                                                                        }
+                                                                                        else
+                                                                                        {
+                                                                                            std::vector<Expression*> matrix{};
+                                                                                            ExpressionList* list = dynamic_cast<ExpressionList*>($3);
+                                                                                            if (list)
+                                                                                            {
+                                                                                                for (auto expr : list->getVectorExpression())
+                                                                                                {
+                                                                                                    Vector* vec = dynamic_cast<Vector*>(expr);
+                                                                                                    if (vec)
+                                                                                                    {
+                                                                                                        matrix.push_back(vec);
+                                                                                                    }
+                                                                                                    else
+                                                                                                    {
+                                                                                                        Name* name = dynamic_cast<Name*>(expr);
+                                                                                                        if (name)
+                                                                                                        {
+                                                                                                            matrix.push_back(name);
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                            if (pointers.find($3) != pointers.end())
+                                                                                            {
+                                                                                                pointers.erase($3);
+                                                                                            }
+                                                                                            delete $3;
+                                                                                            Expression* e = new Matrix(matrix);
+                                                                                            pointers.emplace(e);
+                                                                                            Expression* e2 = new Determinant(e);
+                                                                                            pointers.emplace(e2);
+                                                                                            $$ = e2;
+                                                                                        }
                                                                                      }
                      ;
 
