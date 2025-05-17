@@ -14,17 +14,6 @@ std::string Unit::toString() const noexcept
 }
 void Unit::destroy() noexcept {}
 
-//Invalid
-Invalid::Invalid() {}
-Expression* Invalid::eval(Environment& env) const
-{
-    return new Invalid();
-}
-std::string Invalid::toString() const noexcept
-{
-    return "INVALID OPERATION";
-}
-
 // Value
 Value::Value(DataType _dataType) : dataType{_dataType} {}
 DataType Value::getDataType() const
@@ -32,6 +21,28 @@ DataType Value::getDataType() const
     return dataType;
 }
 void Value::destroy() noexcept {}
+
+//Invalid
+Invalid::Invalid(const std::string& msg) : message(msg), Value(DataType::Invalid) {}
+Expression* Invalid::eval(Environment& env) const
+{
+    return new Invalid(message);
+}
+std::string Invalid::toString() const noexcept
+{
+    return message.empty() ? "INVALID OPERATION" : "INVALID: " + message;
+}
+
+//Impossible
+Impossible::Impossible(std::string msg) : message(msg), Value(DataType::Impossible) {}
+Expression* Impossible::eval(Environment& env) const
+{
+    return new Impossible(message);
+}
+std::string Impossible::toString() const noexcept
+{
+    return message.empty() ? "IMPOSSIBLE OPERATION" : "IMPOSSIBLE: " + message;
+}
 
 // Unary Expression
 UnaryExpression::UnaryExpression(Expression* _expression) : expression(_expression) {}
@@ -61,17 +72,6 @@ void BinaryExpression::destroy() noexcept
         delete rightExpression;
         rightExpression = nullptr;
     }
-}
-
-//Impossible
-Impossible::Impossible() : Value(DataType::Impossible) {}
-Expression* Impossible::eval(Environment& env) const
-{
-    return new Impossible();
-}
-std::string Impossible::toString() const noexcept
-{
-    return value;
 }
 
 // Number
@@ -184,7 +184,7 @@ Expression* Addition::eval(Environment& env) const
             delete exp1;
             exp2->destroy();
             delete exp2;
-            return new Impossible();
+            return new Impossible("Matrix addition requires matrices of same dimensions");
         }
 
         auto expressionDeleter = [] (Expression* exp)
@@ -442,7 +442,7 @@ Expression* Multiplication::eval(Environment& env) const
             delete exp1;
             exp2->destroy();
             delete exp2;
-            return new Impossible();
+            return new Impossible("Matrix multiplication requires columns of first matrix to match rows of second");
         }
 
         auto first_row_mat2 = dynamic_cast<Vector*>(matrix2[0]);
@@ -629,7 +629,7 @@ Expression* Division::eval(Environment& env) const
         delete exp1;
         exp2->destroy();
         delete exp2;
-        return new Impossible();
+        return new Impossible("Division by 0!");
     }
     double result = num1->getNumber() / num2->getNumber();
     exp1->destroy();
@@ -671,7 +671,11 @@ Expression* Power::eval(Environment& env) const
     }
     if (num2->getNumber() <= 0 && std::abs(num1->getNumber()) <= 0.00000001)
     {
-        return new Impossible();
+        exp1->destroy();
+        delete exp1;
+        exp2->destroy();
+        delete exp2;
+        return new Impossible("Undefined operation for 0 to power of non-positive number");
     }
     double result = std::pow(num1->getNumber(), num2->getNumber());
     exp1->destroy();
@@ -709,7 +713,7 @@ Expression* NaturalLogarithm::eval(Environment& env) const
     {
         exp->destroy();
         delete exp;
-        return new Impossible();
+        return new Impossible("Argument must be positive");
     }
     double result = std::log(num->getNumber());
     exp->destroy();
@@ -752,7 +756,7 @@ Expression* Logarithm::eval(Environment& env) const
         exp2->destroy();
         delete exp1;
         delete exp2;
-        return new Impossible();
+        return new Impossible("Logarithm base must be positive and != 1, and argument must be positive");
     }
 
     double result = std::log(num1->getNumber()) / std::log(num2->getNumber());
@@ -791,7 +795,7 @@ Expression* SquareRoot::eval(Environment& env) const
     {
         exp->destroy();
         delete exp;
-        return new Impossible();
+        return new Impossible("Square root of negative number is not a real number");
     }
     double result = std::sqrt(num->getNumber());
     exp->destroy();
@@ -834,7 +838,7 @@ Expression* Root::eval(Environment& env) const
         exp2->destroy();
         delete exp1;
         delete exp2;
-        return new Impossible();
+        return new Impossible("Root base must be positive and != 1, and radicand must be positive");
     }
 
     double result = std::pow(num1->getNumber(), 1.0 / num2->getNumber());
@@ -856,24 +860,24 @@ Expression* Sine::eval(Environment& env) const
     auto element = dynamic_cast<Value*>(exp);
     if (element == nullptr)
     {
-        return new SquareRoot(exp);
+        return new Sine(exp);
     }
     if(element->getDataType() == DataType::Name)
     {
-        return new SquareRoot(exp);
+        return new Sine(exp);
     }
     auto num = dynamic_cast<Number*>(exp);
     if (num == nullptr)
     {
         exp->destroy();
         delete exp;
-        return new Invalid();
+        return new Invalid("Trigonometric functions require numeric input");
     }
     if (num->getNumber() < 0)
     {
         exp->destroy();
         delete exp;
-        return new Impossible();
+        return new Impossible("Angle must be greater than 0");
     }
     double result = std::sin(num->getNumber());
     exp->destroy();
@@ -892,24 +896,24 @@ Expression* Cosine::eval(Environment& env) const
     auto element = dynamic_cast<Value*>(exp);
     if (element == nullptr)
     {
-        return new SquareRoot(exp);
+        return new Cosine(exp);
     }
     if(element->getDataType() == DataType::Name)
     {
-        return new SquareRoot(exp);
+        return new Cosine(exp);
     }
     auto num = dynamic_cast<Number*>(exp);
     if (num == nullptr)
     {
         exp->destroy();
         delete exp;
-        return new Invalid();
+        return new Invalid("Trigonometric functions require numeric input");
     }
     if (num->getNumber() < 0)
     {
         exp->destroy();
         delete exp;
-        return new Impossible();
+        return new Impossible("Angle must be greater than 0");
     }
     double result = std::cos(num->getNumber());
     exp->destroy();
@@ -928,24 +932,24 @@ Expression* Tangent::eval(Environment& env) const
     auto element = dynamic_cast<Value*>(exp);
     if (element == nullptr)
     {
-        return new SquareRoot(exp);
+        return new Tangent(exp);
     }
     if(element->getDataType() == DataType::Name)
     {
-        return new SquareRoot(exp);
+        return new Tangent(exp);
     }
     auto num = dynamic_cast<Number*>(exp);
     if (num == nullptr)
     {
         exp->destroy();
         delete exp;
-        return new Invalid();
+        return new Invalid("Trigonometric functions require numeric input");
     }
     if (std::abs(std::cos(num->getNumber())) <= 0.00000001)
     {
         exp->destroy();
         delete exp;
-        return new Impossible();
+        return new Impossible("Tangent is undefined at this angle (cosine is 0)");
     }
     double result = std::tan(num->getNumber());
     exp->destroy();
@@ -964,24 +968,24 @@ Expression* Cotangent::eval(Environment& env) const
     auto element = dynamic_cast<Value*>(exp);
     if (element == nullptr)
     {
-        return new SquareRoot(exp);
+        return new Cotangent(exp);
     }
     if(element->getDataType() == DataType::Name)
     {
-        return new SquareRoot(exp);
+        return new Cotangent(exp);
     }
     auto num = dynamic_cast<Number*>(exp);
     if (num == nullptr)
     {
         exp->destroy();
         delete exp;
-        return new Invalid();
+        return new Invalid("Trigonometric functions require numeric input");
     }
     if (std::abs(std::sin(num->getNumber())) <= 0.00000001)
     {
         exp->destroy();
         delete exp;
-        return new Impossible();
+        return new Impossible("Cotangent is undefined at this angle (sine is 0)");
     }
     double result = 1 / std::tan(num->getNumber());
     exp->destroy();
@@ -1036,7 +1040,7 @@ Expression* PairFirst::eval(Environment& env) const
     {
         exp->destroy();
         delete exp;
-        return new Invalid();
+        return new Invalid("Expected a pair but got different type");
     }
     auto result = pair->getFirst()->eval(env);
     exp->destroy();
@@ -1057,7 +1061,7 @@ Expression* PairSecond::eval(Environment& env) const
     {
         exp->destroy();
         delete exp;
-        return new Invalid();
+        return new Invalid("Expected a pair but got different type");
     }
     auto result = pair->getSecond()->eval(env);
     exp->destroy();
@@ -1084,7 +1088,7 @@ Expression* Vector::eval(Environment& env) const
                 e->destroy();
                 delete e;
             }
-            return new Invalid();
+            return new Invalid("Vector contains invalid elements");
         }
         newVector.push_back(element);
     }
@@ -1126,19 +1130,21 @@ Expression* Matrix::eval(Environment& env) const
     std::vector<Expression*> new_matrix{};
     if (!matrixExpression.size())
     {
-        return new Invalid();
+        return new Invalid("Matrix size is 0");
     }
     auto first = matrixExpression[0]->eval(env);
 
     Vector* first_row = dynamic_cast<Vector*>(first);
+    Name* first_row_name = dynamic_cast<Name*>(first);
 
-    if (first_row == nullptr)
+    if (first_row == nullptr && first_row_name == nullptr)
     {
         first->destroy();
         delete first;
         return new Invalid();
     }
-    size_t row_size = first_row->size();
+
+    size_t row_size = 0;
 
     first->destroy();
     delete first;
@@ -1147,15 +1153,35 @@ Expression* Matrix::eval(Environment& env) const
     {
         auto r = vec->eval(env);
         Vector* row = dynamic_cast<Vector*>(r);
-        if (row == nullptr)
+        Name* row_name = dynamic_cast<Name*>(r);
+        if (row == nullptr && row_name == nullptr)
         {
             r->destroy();
             delete r;
             return new Invalid();
         }
-        if (row->size() != row_size)
+        if (row_name != nullptr)
         {
-            return new Invalid();
+            new_matrix.push_back(new Name(row_name->getName()));
+            r->destroy();
+            delete r;
+            continue;
+        }
+        if (row_size == 0)
+        {
+            row_size = row->size();
+        }
+        else if (row->size() != row_size)
+        {
+            r->destroy();
+            delete r;
+            for (auto &exp : new_matrix)
+            {
+                exp->destroy();
+                delete exp;
+                exp = nullptr;
+            }
+            return new Invalid("All matrix rows must have the same number of elements");
         }
         std::vector<Expression*> new_vector{};
         for (Expression* exp : row->getVectorExpression())
@@ -1167,6 +1193,14 @@ Expression* Matrix::eval(Environment& env) const
                 {
                     e->destroy();
                     delete e;
+                }
+                r->destroy();
+                delete r;
+                for (auto &exp : new_matrix)
+                {
+                    exp->destroy();
+                    delete exp;
+                    exp = nullptr;
                 }
                 return new Invalid();
             }
@@ -1260,7 +1294,7 @@ Expression* InverseMatrix::gauss(std::vector<std::vector<Expression*>> matrixExp
 
         if (matrix[i][i] == 0)
         {
-            return new Impossible();
+            return new Impossible("Matrix is singular (non-invertible)");
         }
 
         for (int jRow = i + 1; jRow < size; ++jRow)
@@ -1334,7 +1368,9 @@ Expression* InverseMatrix::eval(Environment& env) const
 
     if (matrix_to_inverse.size() != matrix_to_inverse[0].size()) // Validation for Square Matrix
     {
-        return new Impossible();
+        evMatrix->destroy();
+        delete evMatrix;
+        return new Impossible("Matrix must be square to compute inverse");
     }
     auto result = gauss(matrix_to_inverse);
     evMatrix->destroy();
@@ -1449,7 +1485,9 @@ Expression* MatrixLU::eval(Environment& env) const
     }
     if (matrix_to_lower_upper.size() != matrix_to_lower_upper[0].size()) // Validation for Square Matrix
     {
-        return new Impossible();
+        evMatrix->destroy();
+        delete evMatrix;
+        return new Impossible("Matrix must be square for LU decomposition");
     }
     auto result = lowerUpperDecomposition(matrix_to_lower_upper);
     evMatrix->destroy();
@@ -1570,7 +1608,9 @@ Expression* TridiagonalMatrix::eval(Environment& env) const
 
     if (matrix_to_tridiagonal.size() != matrix_to_tridiagonal[0].size()) // Validation for Square Matrix
     {
-        return new Impossible();
+        evMatrix->destroy();
+        delete evMatrix;
+        return new Impossible("Matrix must be square to make tridiagonal");
     }
     auto result = tridiagonal(matrix_to_tridiagonal);
     evMatrix->destroy();
@@ -1832,12 +1872,16 @@ Expression* Integral::simpsonMethod(double a, double b, int n, Expression* funct
             double w = (i == 0 || i == 3) ? 1 : 3;
             env.push_front(std::make_pair(_variable->getName(), new Number(x)));
             auto re = function->eval(env);
-            Number* funcResult = dynamic_cast<Number*>(re);
-            if (funcResult == nullptr)
+            Number* func_result = dynamic_cast<Number*>(re);
+            if (func_result == nullptr)
             {
-                return new Invalid();
+                function->destroy();
+                delete function;
+                re->destroy();
+                delete re;
+                return new Invalid("ODE function must return a numeric value");
             }
-            ss = ss + w * funcResult->getNumber();
+            ss = ss + w * func_result->getNumber();
             re->destroy();
             delete re;
         }
@@ -1861,12 +1905,16 @@ Expression* Integral::simpsonMethod(double a, double b, int n, Expression* funct
         }
         env.push_front(std::make_pair(_variable->getName(), new Number(x)));
         auto re = function->eval(env);
-        Number* funcResult = dynamic_cast<Number*>(re);
-        if (funcResult == nullptr)
+        Number* func_result = dynamic_cast<Number*>(re);
+        if (func_result == nullptr)
         {
-            return new Invalid();
+            function->destroy();
+            delete function;
+            re->destroy();
+            delete re;
+            return new Invalid("Undefined variable: '" + _variable->getName() + "'");
         }
-        s = s + w * funcResult->getNumber();
+        s = s + w * func_result->getNumber();
         re->destroy();
         delete re;
     }
@@ -1913,7 +1961,7 @@ Expression* Integral::eval(Environment& env) const
         delete t2;
         va->destroy();
         delete va;
-        return new Invalid();
+        return new Invalid("Integration variable must be a valid identifier");
     }
     Environment envIntegral = std::forward_list<std::pair<std::string, Expression*>>{};
     auto result = simpsonMethod(a, b, 100, function->eval(env), envIntegral, var);
@@ -1935,12 +1983,17 @@ Expression* Integral::eval(Environment& env) const
     delete t2;
     va->destroy();
     delete va;
+
     return result;
 }
 std::string Integral::toString() const noexcept
 {
     std::string str = "Interval: " + interval->toString() + " | Integral = ∫(" + function->toString() + ")d" + variable->toString();
     return str;
+}
+std::tuple<Expression*, Expression*, Expression*> Integral::getExpressions() const noexcept
+{
+    return std::make_tuple(interval, function, variable);
 }
 void Integral::destroy() noexcept
 {
@@ -2002,7 +2055,7 @@ Expression* Interpolate::eval(Environment& env) const
             delete nu;
             ve->destroy();
             delete ve;
-            return new Invalid();
+            return new Invalid("Interpolation requires vector of (x, y) pairs");
         }
         auto num0 = PairFirst{pair}.eval(env);
         auto num1 = PairSecond{pair}.eval(env);
@@ -2049,6 +2102,10 @@ Expression* Interpolate::eval(Environment& env) const
 std::string Interpolate::toString() const noexcept
 {
     return vectorExpression->toString() + "\nInterpolate Number: " +numInter->toString();
+}
+std::tuple<Expression*, Expression*> Interpolate::getExpressions() const noexcept
+{
+    return std::make_tuple(vectorExpression, numInter);
 }
 void Interpolate::destroy() noexcept
 {
@@ -2170,7 +2227,7 @@ Expression* ODEFirstOrderInitialValues::eval(Environment& env) const
         delete x0;
         tE->destroy();
         delete tE;
-        return new Impossible();
+        return new Impossible("Final time must be greater than initial time");
     }
     auto va = variable->eval(env);
     auto var = dynamic_cast<Name*>(va);
@@ -2218,6 +2275,10 @@ std::string ODEFirstOrderInitialValues::toString() const noexcept
 {
     return variable->toString() + "' = " + funct->toString() +"\n[t,"+ variable->toString()+"] = " + initialValue->toString() + "\nT_Final: " + tFinal->toString();
 }
+std::tuple<Expression*, Expression*, Expression*, Expression*> ODEFirstOrderInitialValues::getExpressions() const noexcept
+{
+    return std::make_tuple(funct, initialValue, tFinal, variable);
+}
 void ODEFirstOrderInitialValues::destroy() noexcept
 {
     if (funct != nullptr)
@@ -2249,6 +2310,11 @@ void ODEFirstOrderInitialValues::destroy() noexcept
 FindRootBisection::FindRootBisection(Expression* _interval, Expression* _function, Expression* _variable, Expression* _iterationLimit) : interval(_interval), function(_function), variable(_variable), iterationLimit(_iterationLimit) {}
 Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expression* evFunction, Environment& env, Name* _variable, Number* _iterationLimit) const
 {
+    if (!left || !right || !evFunction || !_variable || !_iterationLimit)
+    {
+        return new Invalid("Null input in bisection parameters");
+    }
+
     double a = left->getNumber(), c = right->getNumber(), ep = 0.000001;
     size_t il = _iterationLimit->getNumber();
 
@@ -2363,7 +2429,7 @@ Expression* FindRootBisection::eval(Environment& env) const
         delete l;
         r->destroy();
         delete r;
-        return new Invalid();
+        return new Invalid("Left interval bound must be less than right bound");
     }
     auto v = variable->eval(env);
     auto var = dynamic_cast<Name*>(v);
@@ -2422,6 +2488,10 @@ Expression* FindRootBisection::eval(Environment& env) const
 std::string FindRootBisection::toString() const noexcept
 {
     return "Interval: " + interval->toString() + " | Function: " + function->toString();
+}
+std::tuple<Expression*, Expression*, Expression*, Expression*> FindRootBisection::getExpressions() const noexcept
+{
+    return std::make_tuple(interval, function, variable, iterationLimit);
 }
 void FindRootBisection::destroy() noexcept
 {
@@ -2493,19 +2563,127 @@ void Print::destroy() noexcept {}
 Expression* Assigment::eval(Environment& env) const
 {
     Name* leftName = dynamic_cast<Name*>(leftExpression);
+
     if (leftName != nullptr)
     {
-        env.push_front(std::make_pair(leftName->getName(), rightExpression->eval(env)));
-        return new Unit();
+        const std::string& name = leftName->getName();
+        if (!containsName(rightExpression, name, env))
+        {
+            env.push_front(std::make_pair(name, rightExpression->eval(env)));
+            return new Unit();
+        }
+        else
+        {
+            return new Invalid("Recursive assignment detected for variable '" + name + "'");
+        }
     }
 
-    return new Invalid();
+    return new Invalid("Bad assignment");
 }
 std::string Assigment::toString() const noexcept
 {
     return leftExpression->toString() + " = " + rightExpression->toString();
 }
+bool Assigment::containsName(Expression* expr, const std::string& varName, Environment& env) const noexcept
+{
+    if (expr == nullptr)
+    {
+        return false;
+    }
 
+    if (auto name = dynamic_cast<Name*>(expr))
+    {
+        return name->getName() == varName;
+    }
+
+    if (auto binary = dynamic_cast<BinaryExpression*>(expr))
+    {
+        return containsName(binary->getLeftExpression(), varName, env) || containsName(binary->getRightExpression(), varName, env);
+    }
+
+    if (auto unary = dynamic_cast<UnaryExpression*>(expr))
+    {
+        return containsName(unary->getExpression(), varName, env);
+    }
+
+    if (auto vec = dynamic_cast<Vector*>(expr))
+    {
+        for (auto e : vec->getVectorExpression())
+        {
+            if (containsName(e, varName, env))
+            {
+                return true;
+            }
+        }
+    }
+
+    if (auto mat = dynamic_cast<Matrix*>(expr))
+    {
+        for (auto e : mat->getMatrixExpression())
+        {
+            if (containsName(e, varName, env))
+            {
+                return true;
+            }
+        }
+    }
+
+    if (auto pair = dynamic_cast<Pair*>(expr))
+    {
+        return containsName(pair->getFirst(), varName, env) || containsName(pair->getSecond(), varName, env);
+    }
+
+    if (auto func = dynamic_cast<Function*>(expr))
+    {
+        return containsName(func->getExpression(), varName, env);
+    }
+
+    if (auto integral = dynamic_cast<Integral*>(expr))
+    {
+        auto exprs = integral->getExpressions();
+        return containsName(std::get<0>(exprs), varName, env) ||
+               containsName(std::get<1>(exprs), varName, env) ||
+               containsName(std::get<2>(exprs), varName, env);
+    }
+
+    if (auto interp = dynamic_cast<Interpolate*>(expr))
+    {
+        auto exprs = interp->getExpressions();
+        return containsName(std::get<0>(exprs), varName, env) ||
+               containsName(std::get<1>(exprs), varName, env);
+    }
+
+    if (auto ode = dynamic_cast<ODEFirstOrderInitialValues*>(expr))
+    {
+        auto exprs = ode->getExpressions();
+        return containsName(std::get<0>(exprs), varName, env) ||
+               containsName(std::get<1>(exprs), varName, env) ||
+               containsName(std::get<2>(exprs), varName, env) ||
+               containsName(std::get<3>(exprs), varName, env);
+    }
+
+    if (auto root = dynamic_cast<FindRootBisection*>(expr))
+    {
+        auto exprs = root->getExpressions();
+        return containsName(std::get<0>(exprs), varName, env) ||
+               containsName(std::get<1>(exprs), varName, env) ||
+               containsName(std::get<2>(exprs), varName, env) ||
+               containsName(std::get<3>(exprs), varName, env);
+    }
+
+    if (auto list = dynamic_cast<ExpressionList*>(expr))
+    {
+        for (auto e : list->getVectorExpression())
+        {
+            if (containsName(e, varName, env))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 //Expression List
 ExpressionList::ExpressionList() : expressions{}, sz{0} {}
 Expression* ExpressionList::eval(Environment& env) const

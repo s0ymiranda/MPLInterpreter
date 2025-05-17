@@ -16,7 +16,7 @@ class Unit : public Expression
 public:
     Unit();
     Expression* eval(Environment& env) const override;
-    std::string toString() const noexcept;
+    std::string toString() const noexcept override;
     void destroy() noexcept override;
 };
 
@@ -63,20 +63,22 @@ public:
 
 class Impossible : public Value
 {
-protected:
-    std::string value = "IMPOSSIBLE";
+private:
+    std::string message;
 public:
-    Impossible();
+    Impossible(std::string msg = "");
     Expression* eval(Environment& env) const override;
-    std::string toString() const noexcept;
+    std::string toString() const noexcept override;
 };
 
-class Invalid : public Unit
+class Invalid : public Value
 {
+private:
+    std::string message;
 public:
-    Invalid();
+    Invalid(const std::string& msg = "");
     Expression* eval(Environment& env) const override;
-    std::string toString() const noexcept;
+    std::string toString() const noexcept override;
 };
 
 class Number : public Value
@@ -369,6 +371,7 @@ public:
     Integral(Expression* _interval, Expression* _function, Expression* _variable);
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
+    std::tuple<Expression*, Expression*, Expression*> getExpressions() const noexcept;
     void destroy() noexcept override;
 };
 
@@ -381,6 +384,7 @@ public:
     Interpolate(Expression* _vectorExpression, Expression* _numInter);
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
+    std::tuple<Expression*, Expression*> getExpressions() const noexcept;
     void destroy() noexcept override;
 };
 
@@ -396,6 +400,7 @@ public:
     ODEFirstOrderInitialValues(Expression* _funct, Expression* _initialValue, Expression* _tFinal, Expression* _variable);
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
+    std::tuple<Expression*, Expression*, Expression*, Expression*> getExpressions() const noexcept;
     void destroy() noexcept override;
 };
 
@@ -411,6 +416,7 @@ public:
     FindRootBisection(Expression* _interval, Expression* _function, Expression* _variable, Expression* _iterationLimit = new Number(100));
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;
+    std::tuple<Expression*, Expression*, Expression*, Expression*> getExpressions() const noexcept;
     void destroy() noexcept override;
 };
 
@@ -439,6 +445,9 @@ public:
 
 class Assigment : public BinaryExpression
 {
+private:
+    bool containsName(Expression* expr, const std::string& varName, Environment& env) const noexcept;
+public:
     using BinaryExpression::BinaryExpression;
     Expression* eval(Environment& env) const override;
     std::string toString() const noexcept override;

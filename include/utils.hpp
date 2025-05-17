@@ -20,6 +20,7 @@ enum class DataType
     Number,
     Variable,
     Impossible,
+    Invalid,
     Name
 };
 
