@@ -1882,7 +1882,7 @@ Expression* Integral::eval(Environment& env) const
     {
         in->destroy();
         delete in;
-        return nullptr;
+        return new Invalid();
     }
     auto t1 = PairFirst{inter}.eval(env);
     auto t2 = PairSecond{inter}.eval(env);

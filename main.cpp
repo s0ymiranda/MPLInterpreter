@@ -15,6 +15,8 @@
 extern FILE* yyin;
 extern int yyparse();
 extern Expression* parser_result;
+extern void yyrestart(FILE* input);
+extern int yylex_destroy();
 
 const std::string GREEN = "\e[32m";
 const std::string RED = "\e[31m";
@@ -102,7 +104,7 @@ std::string get_output_prompt(size_t i)
 std::string get_error_prompt(const std::string& error_type)
 {
     return RED +
-        std::string("-------------------------------------------------------------------------------\n") + 
+        std::string("-------------------------------------------------------------------------------\n") +
         error_type + COLOR_OFF + ": ";
 }
 
@@ -167,6 +169,7 @@ int main() {
 
         int result = yyparse();
         fclose(yyin);
+        yyin = nullptr;
 
         if (result == 0)
         {
@@ -175,9 +178,9 @@ int main() {
                 auto exs = dynamic_cast<ExpressionList*>(parser_result);
                 if (exs)
                 {
-                    std::unique_ptr<Expression> result(exs->eval(env));
-                    std::cout << get_output_prompt(counter) << result->toString() << "\n\n";
-                    result->destroy();
+                    std::unique_ptr<Expression> res(exs->eval(env));
+                    std::cout << get_output_prompt(counter) << res->toString() << "\n\n";
+                    res->destroy();
                 }
                 else
                 {
@@ -187,6 +190,7 @@ int main() {
                 if (parser_result)
                 {
                     parser_result->destroy();
+                    delete parser_result;
                     parser_result = nullptr;
                 }
 
@@ -199,6 +203,7 @@ int main() {
                 if (parser_result)
                 {
                     parser_result->destroy();
+                    delete parser_result;
                     parser_result = nullptr;
                 }
             }
@@ -209,8 +214,11 @@ int main() {
             if (parser_result)
             {
                 parser_result->destroy();
+                delete parser_result;
                 parser_result = nullptr;
             }
+            yyrestart(nullptr);
+            yylex_destroy();
         }
     }
 
