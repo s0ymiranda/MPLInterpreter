@@ -5,6 +5,7 @@
 #include <vector>
 #include <forward_list>
 #include <memory>
+#include <unordered_set>
 #include <Expression.hpp>
 
 #define Function ReadlineFunctionWrapper
@@ -17,6 +18,7 @@ extern int yyparse();
 extern Expression* parser_result;
 extern void yyrestart(FILE* input);
 extern int yylex_destroy();
+extern std::unordered_set<Expression*> pointers;
 
 const std::string GREEN = "\e[32m";
 const std::string RED = "\e[31m";
@@ -187,25 +189,19 @@ int main() {
                     std::cerr << get_error_prompt("Evaluation error") << "Expected ExpressionList\n\n";
                 }
 
-                if (parser_result)
-                {
-                    parser_result->destroy();
-                    delete parser_result;
-                    parser_result = nullptr;
-                }
-
                 add_history(prog.c_str());
                 ++counter;
             }
             catch (const std::exception& e)
             {
                 std::cerr << get_error_prompt("Runtime error") << e.what() << "\n\n";
-                if (parser_result)
-                {
-                    parser_result->destroy();
-                    delete parser_result;
-                    parser_result = nullptr;
-                }
+            }
+
+            if (parser_result)
+            {
+                parser_result->destroy();
+                delete parser_result;
+                parser_result = nullptr;
             }
         }
         else
@@ -217,9 +213,21 @@ int main() {
                 delete parser_result;
                 parser_result = nullptr;
             }
+
+            for (Expression* expr : pointers)
+            {
+                if (expr != nullptr)
+                {
+                    delete expr;
+                    expr = nullptr;
+                }
+            }
+
             yyrestart(nullptr);
             yylex_destroy();
         }
+
+        pointers.clear();
     }
 
     for (auto& t : env)

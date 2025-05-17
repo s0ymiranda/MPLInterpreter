@@ -2,9 +2,12 @@
 #include <stdlib.h>
 #include <Expression.hpp>
 
+#include <unordered_set>
+
 extern FILE* yyin;
 extern int yyparse();
 extern Expression* parser_result;
+extern std::unordered_set<Expression*> pointers;
 
 void usage(char* argv[])
 {
@@ -33,9 +36,9 @@ int main(int argc, char* argv[])
     {
         auto env = Environment();
         auto exs = dynamic_cast<ExpressionList*>(parser_result);
-        std::unique_ptr<Expression> test(exs->eval(env));
-        printf("%s", test->toString().c_str());
-        test->destroy();
+        std::unique_ptr<Expression> res(exs->eval(env));
+        printf("%s", res->toString().c_str());
+        res->destroy();
         exs->destroy();
         for (auto& t : env)
         {
@@ -50,6 +53,18 @@ int main(int argc, char* argv[])
     else
     {
         printf("Parse failed!\n");
+
+        for (Expression* expr : pointers)
+        {
+            if (expr != nullptr)
+            {
+                delete expr;
+                expr = nullptr;
+            }
+        }
+
+        pointers.clear();
     }
+
     return 0;
 }

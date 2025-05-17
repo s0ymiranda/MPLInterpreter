@@ -489,17 +489,5 @@ function_call : logarithmic_function_call
 int yyerror(const char* s)
 {
     printf("Syntax error: %s\n", s);
-
-    for (Expression* expr : pointers)
-    {
-        if (expr != nullptr)
-        {
-            delete expr;
-            expr = nullptr;
-        }
-    }
-
-    pointers.clear();
-
     return 1;
 }
