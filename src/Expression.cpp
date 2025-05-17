@@ -124,7 +124,12 @@ Expression* Name::eval(Environment& env) const
         {
             if (pair.first == name)
             {
-                return pair.second->eval(env);
+                Expression* exp = pair.second;
+                if (containsName(exp, name, env))
+                {
+                    return new Invalid("(Recursive assignment detected for variable '" + name + "')");
+                }
+                return exp->eval(env);
             }
         }
     }
@@ -1348,10 +1353,13 @@ Expression* InverseMatrix::gauss(std::vector<std::vector<Expression*>> matrixExp
 }
 Expression* InverseMatrix::eval(Environment& env) const
 {
-    auto evMatrix = dynamic_cast<Matrix*>(matrix->eval(env));
+    auto evExpr = matrix->eval(env);
+    auto evMatrix = dynamic_cast<Matrix*>(evExpr);
     if (evMatrix == nullptr)
     {
-        return new Invalid();
+        evExpr->destroy();
+        delete evExpr;
+        return new Invalid("It is required to introduce a valid Matrix to compute inverse");
     }
     auto mat = evMatrix->getMatrixExpression();
     std::vector<std::vector<Expression*>> matrix_to_inverse{};
@@ -2584,106 +2592,106 @@ std::string Assigment::toString() const noexcept
 {
     return leftExpression->toString() + " = " + rightExpression->toString();
 }
-bool Assigment::containsName(Expression* expr, const std::string& varName, Environment& env) const noexcept
-{
-    if (expr == nullptr)
-    {
-        return false;
-    }
+// bool Assigment::containsName(Expression* expr, const std::string& varName, Environment& env) const noexcept
+// {
+//     if (expr == nullptr)
+//     {
+//         return false;
+//     }
 
-    if (auto name = dynamic_cast<Name*>(expr))
-    {
-        return name->getName() == varName;
-    }
+//     if (auto name = dynamic_cast<Name*>(expr))
+//     {
+//         return name->getName() == varName;
+//     }
 
-    if (auto binary = dynamic_cast<BinaryExpression*>(expr))
-    {
-        return containsName(binary->getLeftExpression(), varName, env) || containsName(binary->getRightExpression(), varName, env);
-    }
+//     if (auto binary = dynamic_cast<BinaryExpression*>(expr))
+//     {
+//         return containsName(binary->getLeftExpression(), varName, env) || containsName(binary->getRightExpression(), varName, env);
+//     }
 
-    if (auto unary = dynamic_cast<UnaryExpression*>(expr))
-    {
-        return containsName(unary->getExpression(), varName, env);
-    }
+//     if (auto unary = dynamic_cast<UnaryExpression*>(expr))
+//     {
+//         return containsName(unary->getExpression(), varName, env);
+//     }
 
-    if (auto vec = dynamic_cast<Vector*>(expr))
-    {
-        for (auto e : vec->getVectorExpression())
-        {
-            if (containsName(e, varName, env))
-            {
-                return true;
-            }
-        }
-    }
+//     if (auto vec = dynamic_cast<Vector*>(expr))
+//     {
+//         for (auto e : vec->getVectorExpression())
+//         {
+//             if (containsName(e, varName, env))
+//             {
+//                 return true;
+//             }
+//         }
+//     }
 
-    if (auto mat = dynamic_cast<Matrix*>(expr))
-    {
-        for (auto e : mat->getMatrixExpression())
-        {
-            if (containsName(e, varName, env))
-            {
-                return true;
-            }
-        }
-    }
+//     if (auto mat = dynamic_cast<Matrix*>(expr))
+//     {
+//         for (auto e : mat->getMatrixExpression())
+//         {
+//             if (containsName(e, varName, env))
+//             {
+//                 return true;
+//             }
+//         }
+//     }
 
-    if (auto pair = dynamic_cast<Pair*>(expr))
-    {
-        return containsName(pair->getFirst(), varName, env) || containsName(pair->getSecond(), varName, env);
-    }
+//     if (auto pair = dynamic_cast<Pair*>(expr))
+//     {
+//         return containsName(pair->getFirst(), varName, env) || containsName(pair->getSecond(), varName, env);
+//     }
 
-    if (auto func = dynamic_cast<Function*>(expr))
-    {
-        return containsName(func->getExpression(), varName, env);
-    }
+//     if (auto func = dynamic_cast<Function*>(expr))
+//     {
+//         return containsName(func->getExpression(), varName, env);
+//     }
 
-    if (auto integral = dynamic_cast<Integral*>(expr))
-    {
-        auto exprs = integral->getExpressions();
-        return containsName(std::get<0>(exprs), varName, env) ||
-               containsName(std::get<1>(exprs), varName, env) ||
-               containsName(std::get<2>(exprs), varName, env);
-    }
+//     if (auto integral = dynamic_cast<Integral*>(expr))
+//     {
+//         auto exprs = integral->getExpressions();
+//         return containsName(std::get<0>(exprs), varName, env) ||
+//                containsName(std::get<1>(exprs), varName, env) ||
+//                containsName(std::get<2>(exprs), varName, env);
+//     }
 
-    if (auto interp = dynamic_cast<Interpolate*>(expr))
-    {
-        auto exprs = interp->getExpressions();
-        return containsName(std::get<0>(exprs), varName, env) ||
-               containsName(std::get<1>(exprs), varName, env);
-    }
+//     if (auto interp = dynamic_cast<Interpolate*>(expr))
+//     {
+//         auto exprs = interp->getExpressions();
+//         return containsName(std::get<0>(exprs), varName, env) ||
+//                containsName(std::get<1>(exprs), varName, env);
+//     }
 
-    if (auto ode = dynamic_cast<ODEFirstOrderInitialValues*>(expr))
-    {
-        auto exprs = ode->getExpressions();
-        return containsName(std::get<0>(exprs), varName, env) ||
-               containsName(std::get<1>(exprs), varName, env) ||
-               containsName(std::get<2>(exprs), varName, env) ||
-               containsName(std::get<3>(exprs), varName, env);
-    }
+//     if (auto ode = dynamic_cast<ODEFirstOrderInitialValues*>(expr))
+//     {
+//         auto exprs = ode->getExpressions();
+//         return containsName(std::get<0>(exprs), varName, env) ||
+//                containsName(std::get<1>(exprs), varName, env) ||
+//                containsName(std::get<2>(exprs), varName, env) ||
+//                containsName(std::get<3>(exprs), varName, env);
+//     }
 
-    if (auto root = dynamic_cast<FindRootBisection*>(expr))
-    {
-        auto exprs = root->getExpressions();
-        return containsName(std::get<0>(exprs), varName, env) ||
-               containsName(std::get<1>(exprs), varName, env) ||
-               containsName(std::get<2>(exprs), varName, env) ||
-               containsName(std::get<3>(exprs), varName, env);
-    }
+//     if (auto root = dynamic_cast<FindRootBisection*>(expr))
+//     {
+//         auto exprs = root->getExpressions();
+//         return containsName(std::get<0>(exprs), varName, env) ||
+//                containsName(std::get<1>(exprs), varName, env) ||
+//                containsName(std::get<2>(exprs), varName, env) ||
+//                containsName(std::get<3>(exprs), varName, env);
+//     }
 
-    if (auto list = dynamic_cast<ExpressionList*>(expr))
-    {
-        for (auto e : list->getVectorExpression())
-        {
-            if (containsName(e, varName, env))
-            {
-                return true;
-            }
-        }
-    }
+//     if (auto list = dynamic_cast<ExpressionList*>(expr))
+//     {
+//         for (auto e : list->getVectorExpression())
+//         {
+//             if (containsName(e, varName, env))
+//             {
+//                 return true;
+//             }
+//         }
+//     }
 
-    return false;
-}
+//     return false;
+// }
 //Expression List
 ExpressionList::ExpressionList() : expressions{}, sz{0} {}
 Expression* ExpressionList::eval(Environment& env) const

@@ -27,3 +27,6 @@ enum class DataType
 class Expression;
 
 using Environment = std::forward_list<std::pair<std::string, Expression*>>;
+
+std::string dataTypeToString(DataType);
+bool containsName(Expression* expr, const std::string& varName, Environment& env) noexcept;

@@ -445,8 +445,8 @@ public:
 
 class Assigment : public BinaryExpression
 {
-private:
-    bool containsName(Expression* expr, const std::string& varName, Environment& env) const noexcept;
+// private:
+//     bool containsName(Expression* expr, const std::string& varName, Environment& env) const noexcept;
 public:
     using BinaryExpression::BinaryExpression;
     Expression* eval(Environment& env) const override;

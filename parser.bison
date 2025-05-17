@@ -413,9 +413,37 @@ vector_or_id_param : vector_expression { $$ = $1; }
                    ;
 
 matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN {
-                                                                                    Expression* e = new InverseMatrix($3);
+                                                                                    std::vector<Expression*> matrix{};
+                                                                                    ExpressionList* list = dynamic_cast<ExpressionList*>($3);
+                                                                                    if (list)
+                                                                                    {
+                                                                                        for (auto expr : list->getVectorExpression())
+                                                                                        {
+                                                                                            Vector* vec = dynamic_cast<Vector*>(expr);
+                                                                                            if (vec)
+                                                                                            {
+                                                                                                matrix.push_back(vec);
+                                                                                            }
+                                                                                            else
+                                                                                            {
+                                                                                                Name* name = dynamic_cast<Name*>(expr);
+                                                                                                if (name)
+                                                                                                {
+                                                                                                    matrix.push_back(name);
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                    if (pointers.find($3) != pointers.end())
+                                                                                    {
+                                                                                        pointers.erase($3);
+                                                                                    }
+                                                                                    delete $3;
+                                                                                    Expression* e = new Matrix(matrix);
                                                                                     pointers.emplace(e);
-                                                                                    $$ = e;
+                                                                                    Expression* e2 = new InverseMatrix(e);
+                                                                                    pointers.emplace(e2);
+                                                                                    $$ = e2;
                                                                                  }
                      | TOKEN_MATRIXLU TOKEN_LPAREN matrix_func_param TOKEN_RPAREN {
                                                                                     Expression* e = new MatrixLU($3);
@@ -440,31 +468,29 @@ matrix_function_call : TOKEN_INVERSE TOKEN_LPAREN matrix_func_param TOKEN_RPAREN
                      ;
 
 operations_function_call : integral_or_bisectionroot TOKEN_LPAREN pair_or_id_param TOKEN_COMMA math_expression TOKEN_COMMA id_param TOKEN_RPAREN {
-                                                                                                                                                            if (dynamic_cast<Name*>($1)->getName() == "BISECTIONROOT")
-                                                                                                                                                            {
-                                                                                                                                                                if (pointers.find($1) != pointers.end())
-                                                                                                                                                                {
-                                                                                                                                                                    pointers.erase($1);
-                                                                                                                                                                }
-                                                                                                                                                                //$1->destroy();
-                                                                                                                                                                delete $1;
-                                                                                                                                                                Expression* e = new FindRootBisection($3, $5, $7);
-                                                                                                                                                                pointers.emplace(e);
-                                                                                                                                                                $$ = e;
-                                                                                                                                                            }
-                                                                                                                                                            else
-                                                                                                                                                            {
-                                                                                                                                                                if (pointers.find($1) != pointers.end())
-                                                                                                                                                                {
-                                                                                                                                                                    pointers.erase($1);
-                                                                                                                                                                }
-                                                                                                                                                                //$1->destroy();
-                                                                                                                                                                delete $1;
-                                                                                                                                                                Expression* e = new Integral($3, $5, $7);
-                                                                                                                                                                pointers.emplace(e);
-                                                                                                                                                                $$ = e;
-                                                                                                                                                            }
+                                                                                                                                                    if (dynamic_cast<Name*>($1)->getName() == "BISECTIONROOT")
+                                                                                                                                                    {
+                                                                                                                                                        if (pointers.find($1) != pointers.end())
+                                                                                                                                                        {
+                                                                                                                                                            pointers.erase($1);
                                                                                                                                                         }
+                                                                                                                                                        delete $1;
+                                                                                                                                                        Expression* e = new FindRootBisection($3, $5, $7);
+                                                                                                                                                        pointers.emplace(e);
+                                                                                                                                                        $$ = e;
+                                                                                                                                                    }
+                                                                                                                                                    else
+                                                                                                                                                    {
+                                                                                                                                                        if (pointers.find($1) != pointers.end())
+                                                                                                                                                        {
+                                                                                                                                                            pointers.erase($1);
+                                                                                                                                                        }
+                                                                                                                                                        delete $1;
+                                                                                                                                                        Expression* e = new Integral($3, $5, $7);
+                                                                                                                                                        pointers.emplace(e);
+                                                                                                                                                        $$ = e;
+                                                                                                                                                    }
+                                                                                                                                                 }
                          | TOKEN_INTERPOLATE TOKEN_LPAREN vector_or_id_param TOKEN_COMMA math_expression TOKEN_RPAREN {
                                                                                                                             Expression* e = new Interpolate($3, $5);
                                                                                                                             pointers.emplace(e);
