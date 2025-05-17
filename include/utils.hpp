@@ -18,9 +18,6 @@ enum class DataType
     Vector,
     Matrix,
     Number,
-    Variable,
-    Impossible,
-    Invalid,
     Name
 };
 

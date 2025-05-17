@@ -6,21 +6,15 @@ std::string dataTypeToString(DataType d)
     switch (d)
     {
     case DataType::Pair:
-        return "Impossible";
+        return "Pair";
     case DataType::Vector:
-        return "Impossible";
+        return "Vector";
     case DataType::Matrix:
-        return "Impossible";
+        return "Matrix";
     case DataType::Number:
-        return "Impossible";
-    case DataType::Variable:
-        return "Impossible";
-    case DataType::Impossible:
-        return "Impossible";
-    case DataType::Invalid:
-        return "Impossible";
+        return "Number";
     case DataType::Name:
-        return "Impossible";
+        return "Name";
     default:
         return "DataType Undefined";
     }

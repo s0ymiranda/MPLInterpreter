@@ -20,6 +20,28 @@ public:
     void destroy() noexcept override;
 };
 
+class Invalid : public Expression
+{
+private:
+    std::string message;
+public:
+    Invalid(const std::string& msg = "");
+    Expression* eval(Environment& env) const override;
+    std::string toString() const noexcept override;
+    void destroy() noexcept override;
+};
+
+class Impossible : public Expression
+{
+    private:
+    std::string message;
+    public:
+    Impossible(std::string msg = "");
+    Expression* eval(Environment& env) const override;
+    std::string toString() const noexcept override;
+    void destroy() noexcept override;
+};
+
 class Value : public Expression
 {
 protected:
@@ -36,10 +58,7 @@ protected:
     Expression* expression;
 public:
     UnaryExpression(Expression* exp);
-    Expression* getExpression()
-    {
-        return expression;
-    }
+    Expression* getExpression();
     void destroy() noexcept override;
 };
 
@@ -50,36 +69,11 @@ protected:
     Expression* rightExpression;
 public:
     BinaryExpression(Expression* _leftExpression, Expression* _rightExpression);
-    Expression* getLeftExpression()
-    {
-        return leftExpression;
-    }
-    Expression* getRightExpression()
-    {
-        return leftExpression;
-    }
+    Expression* getLeftExpression();
+    Expression* getRightExpression();
     void destroy() noexcept override;
 };
 
-class Impossible : public Value
-{
-private:
-    std::string message;
-public:
-    Impossible(std::string msg = "");
-    Expression* eval(Environment& env) const override;
-    std::string toString() const noexcept override;
-};
-
-class Invalid : public Value
-{
-private:
-    std::string message;
-public:
-    Invalid(const std::string& msg = "");
-    Expression* eval(Environment& env) const override;
-    std::string toString() const noexcept override;
-};
 
 class Number : public Value
 {

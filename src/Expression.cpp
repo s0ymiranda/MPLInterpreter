@@ -14,16 +14,8 @@ std::string Unit::toString() const noexcept
 }
 void Unit::destroy() noexcept {}
 
-// Value
-Value::Value(DataType _dataType) : dataType{_dataType} {}
-DataType Value::getDataType() const
-{
-    return dataType;
-}
-void Value::destroy() noexcept {}
-
 //Invalid
-Invalid::Invalid(const std::string& msg) : message(msg), Value(DataType::Invalid) {}
+Invalid::Invalid(const std::string& msg) : message(msg) {}
 Expression* Invalid::eval(Environment& env) const
 {
     return new Invalid(message);
@@ -32,9 +24,10 @@ std::string Invalid::toString() const noexcept
 {
     return message.empty() ? "INVALID OPERATION" : "INVALID: " + message;
 }
+void Invalid::destroy() noexcept {}
 
 //Impossible
-Impossible::Impossible(std::string msg) : message(msg), Value(DataType::Impossible) {}
+Impossible::Impossible(std::string msg) : message(msg) {}
 Expression* Impossible::eval(Environment& env) const
 {
     return new Impossible(message);
@@ -43,6 +36,15 @@ std::string Impossible::toString() const noexcept
 {
     return message.empty() ? "IMPOSSIBLE OPERATION" : "IMPOSSIBLE: " + message;
 }
+void Impossible::destroy() noexcept {}
+
+// Value
+Value::Value(DataType _dataType) : dataType{_dataType} {}
+DataType Value::getDataType() const
+{
+    return dataType;
+}
+void Value::destroy() noexcept {}
 
 // Unary Expression
 UnaryExpression::UnaryExpression(Expression* _expression) : expression(_expression) {}
@@ -54,6 +56,10 @@ void UnaryExpression::destroy() noexcept
         delete expression;
         expression = nullptr;
     }
+}
+Expression* UnaryExpression::getExpression()
+{
+    return expression;
 }
 
 // Binary Expression
@@ -72,6 +78,14 @@ void BinaryExpression::destroy() noexcept
         delete rightExpression;
         rightExpression = nullptr;
     }
+}
+Expression* BinaryExpression::getLeftExpression()
+{
+    return leftExpression;
+}
+Expression* BinaryExpression::getRightExpression()
+{
+    return rightExpression;
 }
 
 // Number
@@ -1366,6 +1380,7 @@ Expression* InverseMatrix::eval(Environment& env) const
     for (auto &vec : mat)
     {
         const auto& v = dynamic_cast<Vector*>(vec);
+
         std::vector<Expression*> row{};
         for (auto &exp : v->getVectorExpression())
         {
