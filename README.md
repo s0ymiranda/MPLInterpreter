@@ -14,6 +14,8 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 
 - **Abstract Syntax Tree:** Currenty from the Syntactic Validator it is constructed an AST.
 
+- **Semantic Analysis:** Evaluation Methods, that verify the semantic validity of the expressions. Use an Environment to maintain the program's state, including variables and their values, and to assist in identifier resolution.
+
 ## Installation and Usage Instructions
 
 1. **Prerequisites (For Debian Distributions Users):**
@@ -56,7 +58,9 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
    ```bash
       ./build/mpl samples/"name of the file".mpl
    ```
-
+## Note
+   In the samples folder you can found examples usages for the lenguage. So you can make your own scripts of our lenguage and test then!. 
+   Currently the main.cpp archive obtains the AST from the parser and evaluates it with the eval method and show the result with the toString method. 
 
 ## Acknowledgements
 For more information about the development and specifications of the Mathematical Programming Language, you can refer to

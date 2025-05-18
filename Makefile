@@ -42,6 +42,7 @@ $(BUILD_DIR)/mpl.o: mpl.cpp $(BUILD_DIR)/token.h
 	$(CXX) -I$(INCLUDE_DIR) -I$(BUILD_DIR) -c $< -o $@
 
 $(BUILD_DIR)/utils.o: $(SRC_DIR)/utils.cpp $(INCLUDE_DIR)/utils.hpp
+
 	$(CXX) -I$(INCLUDE_DIR) -I$(BUILD_DIR) -c $< -o $@
 
 $(BUILD_DIR)/Expression.o: $(SRC_DIR)/Expression.cpp $(INCLUDE_DIR)/Expression.hpp $(INCLUDE_DIR)/utils.hpp

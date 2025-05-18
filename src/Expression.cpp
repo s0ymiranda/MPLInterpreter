@@ -266,7 +266,6 @@ Expression* Addition::eval(Environment& env) const
         }
 
         auto result = (Matrix(rawMatrix)).eval(env);
-
         for (auto& exp : newMatrix)
         {
             exp->destroy();
@@ -526,7 +525,6 @@ Expression* Multiplication::eval(Environment& env) const
         {
             rawMatrix.push_back(vec.get());
         }
-
         auto result = (Matrix(rawMatrix)).eval(env);
 
         for (auto& vec : newMatrix)
