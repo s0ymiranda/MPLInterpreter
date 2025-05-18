@@ -1336,7 +1336,7 @@ Expression* InverseMatrix::gauss(std::vector<std::vector<Expression*>> matrixExp
 
     if (matrix[size - 1][size - 1] == 0)
     {
-        return new Impossible();
+        return new Impossible("Matrix is singular (non-invertible)");
     }
 
     for (size_t m = size; m < size * 2; ++m)
@@ -1380,10 +1380,22 @@ Expression* InverseMatrix::eval(Environment& env) const
     for (auto &vec : mat)
     {
         const auto& v = dynamic_cast<Vector*>(vec);
-
+        if (v == nullptr)
+        {
+            evExpr->destroy();
+            delete evExpr;
+            return new Invalid("Matrix must be numeric");
+        }
         std::vector<Expression*> row{};
         for (auto &exp : v->getVectorExpression())
         {
+            Number* tryNum = dynamic_cast<Number*>(exp);
+            if (tryNum == nullptr)
+            {
+                evExpr->destroy();
+                delete evExpr;
+                return new Invalid("Matrix must be numeric");
+            }
             row.push_back(exp);
         }
         matrix_to_inverse.push_back(row);
@@ -1492,16 +1504,29 @@ Expression* MatrixLU::eval(Environment& env) const
     auto evMatrix = dynamic_cast<Matrix*>(matrix->eval(env));
     if (evMatrix == nullptr)
     {
-        return new Invalid();
+        return new Invalid("It is required to introduce a valid Matrix to compute Matrix LU decomposition");
     }
     auto mat = evMatrix->getMatrixExpression();
     std::vector<std::vector<Expression*>> matrix_to_lower_upper{};
     for (auto &vec : mat)
     {
         const auto& v = dynamic_cast<Vector*>(vec);
+        if (v == nullptr)
+        {
+            evMatrix->destroy();
+            delete evMatrix;
+            return new Invalid("Matrix must be numeric");
+        }
         std::vector<Expression*> row{};
         for (auto &exp : v->getVectorExpression())
         {
+            const auto& tryNum = dynamic_cast<Number*>(exp);
+            if (tryNum == nullptr)
+            {
+                evMatrix->destroy();
+                delete evMatrix;
+                return new Invalid("Matrix must be numeric");
+            }
             row.push_back(exp);
         }
         matrix_to_lower_upper.push_back(row);
@@ -1611,19 +1636,35 @@ Expression* TridiagonalMatrix::tridiagonal(std::vector<std::vector<Expression*>>
 }
 Expression* TridiagonalMatrix::eval(Environment& env) const
 {
-    auto evMatrix = dynamic_cast<Matrix*>(matrix->eval(env));
+    auto inter = matrix->eval(env);
+    auto evMatrix = dynamic_cast<Matrix*>(inter);
     if (evMatrix == nullptr)
     {
-        return new Invalid();
+        inter->destroy();
+        delete inter;
+        return new Invalid("It is required to introduce a valid Matrix to compute tridiagonal");
     }
     auto mat = evMatrix->getMatrixExpression();
     std::vector<std::vector<Expression*>> matrix_to_tridiagonal{};
     for (auto &vec : mat)
     {
         const auto& v = dynamic_cast<Vector*>(vec);
+        if (v == nullptr)
+        {
+            inter->destroy();
+            delete inter;
+            return new Invalid("Matrix must be numeric");
+        }
         std::vector<Expression*> row{};
         for (auto &exp : v->getVectorExpression())
         {
+            const auto& tryNum = dynamic_cast<Number*>(exp);
+            if (tryNum == nullptr)
+            {
+                inter->destroy();
+                delete inter;
+                return new Invalid("Matrix must be numeric");
+            }
             row.push_back(exp);
         }
         matrix_to_tridiagonal.push_back(row);
@@ -1631,13 +1672,13 @@ Expression* TridiagonalMatrix::eval(Environment& env) const
 
     if (matrix_to_tridiagonal.size() != matrix_to_tridiagonal[0].size()) // Validation for Square Matrix
     {
-        evMatrix->destroy();
-        delete evMatrix;
+        inter->destroy();
+        delete inter;
         return new Impossible("Matrix must be square to make tridiagonal");
     }
     auto result = tridiagonal(matrix_to_tridiagonal);
-    evMatrix->destroy();
-    delete evMatrix;
+    inter->destroy();
+    delete inter;
     return result;
 }
 std::string TridiagonalMatrix::toString() const noexcept
@@ -1761,7 +1802,7 @@ Expression* RealEigenvalues::eval(Environment& env) const
     {
         exp->destroy();
         delete exp;
-        return new Invalid();
+        return new Invalid("It is required to introduce a valid Matrix to compute Real Eigenvalues");
     }
 
     auto tridiagonalMatrix = TridiagonalMatrix(matrixExp).eval(env);
@@ -1771,9 +1812,14 @@ Expression* RealEigenvalues::eval(Environment& env) const
     {
         exp->destroy();
         delete exp;
-        tridiagonalMatrix->destroy();
-        delete tridiagonalMatrix;
-        return new Invalid();
+        if (dynamic_cast<Invalid*>(tridiagonalMatrix) == nullptr)
+        {
+
+            tridiagonalMatrix->destroy();
+            delete tridiagonalMatrix;
+            return new Invalid("Cannot compute Real Eigenvalues");
+        }
+        return tridiagonalMatrix;
     }
 
     auto mat = matTri->getMatrixExpression();
@@ -1832,7 +1878,17 @@ Expression* Determinant::eval(Environment& env) const
 {
     auto matrixPair = new MatrixLU(matrix);
     auto second = new PairSecond(matrixPair);
-    auto upperMatrix = dynamic_cast<Matrix*>(second->eval(env));
+    auto inter = second->eval(env);
+    auto upperMatrix = dynamic_cast<Matrix*>(inter);
+    if (upperMatrix == nullptr)
+    {
+        delete second;
+        delete matrixPair;
+        inter->destroy();
+        delete inter;
+        return new Invalid("It is required to introduce a valid Matrix to compute determinant");
+    }
+
     auto U = upperMatrix->getMatrixExpression();
     double det = 1;
     for (size_t i = 0; i < U.size(); ++i)
@@ -1842,8 +1898,8 @@ Expression* Determinant::eval(Environment& env) const
     }
     delete second;
     delete matrixPair;
-    upperMatrix->destroy();
-    delete upperMatrix;
+    inter->destroy();
+    delete inter;
     return new Number(((det < 0) ? -det : det));
 }
 std::string Determinant::toString() const noexcept
@@ -1902,7 +1958,7 @@ Expression* Integral::simpsonMethod(double a, double b, int n, Expression* funct
                 delete function;
                 re->destroy();
                 delete re;
-                return new Invalid("ODE function must return a numeric value");
+                return new Invalid("Integral function must return a numeric value");
             }
             ss = ss + w * func_result->getNumber();
             re->destroy();
@@ -2150,6 +2206,13 @@ void Interpolate::destroy() noexcept
 ODEFirstOrderInitialValues::ODEFirstOrderInitialValues(Expression* _funct, Expression* _initialValue, Expression* _tFinal, Expression* _variable) : funct(_funct), initialValue(_initialValue), tFinal(_tFinal), variable(_variable) {}
 Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, double f, double h, Expression* function, Environment& env, Name* variable) const
 {
+    if (!containsName(function,variable->getName(),env))
+    {
+        function->destroy();
+        delete function;
+        return new Invalid("ODE function not contains the variable");
+    }
+
     double t = _t, x = _x, tn = f;
     while(t < tn)
     {
@@ -2160,6 +2223,10 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
 
         if (num1 == nullptr)
         {
+            function->destroy();
+            delete function;
+            ev_func1->destroy();
+            delete ev_func1;
             return new Invalid();
         }
         double k1 = h * num1->getNumber();
@@ -2170,6 +2237,12 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
 
         if(num2 == nullptr)
         {
+            function->destroy();
+            delete function;
+            ev_func1->destroy();
+            delete ev_func1;
+            ev_func2->destroy();
+            delete ev_func2;
             return new Invalid();
         }
 
@@ -2181,6 +2254,13 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
 
         if (num3 == nullptr)
         {
+            function->destroy();
+            delete function;
+            ev_func1->destroy();
+            delete ev_func1;
+            ev_func2->destroy();
+            delete ev_func2;
+            ev_func3->destroy();
             return new Invalid();
         }
         double k3 = h * num3->getNumber();
@@ -2191,6 +2271,16 @@ Expression* ODEFirstOrderInitialValues::rungekuttaMethod(double _t, double _x, d
 
         if (num4 == nullptr)
         {
+            function->destroy();
+            delete function;
+            ev_func1->destroy();
+            delete ev_func1;
+            ev_func2->destroy();
+            delete ev_func2;
+            ev_func3->destroy();
+            delete ev_func3;
+            ev_func4->destroy();
+            delete ev_func4;
             return new Invalid();
         }
         double k4 = h * num4->getNumber();
@@ -2335,6 +2425,8 @@ Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expr
 {
     if (!left || !right || !evFunction || !_variable || !_iterationLimit)
     {
+        evFunction->destroy();
+        delete evFunction;
         return new Invalid("Null input in bisection parameters");
     }
 
@@ -2344,7 +2436,8 @@ Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expr
     std::string var = _variable->getName();
 
     env.push_front(std::make_pair(var, left));
-    auto _ya = dynamic_cast<Number*>(evFunction->eval(env));
+    auto inter = evFunction->eval(env);
+    auto _ya = dynamic_cast<Number*>(inter);
 
     env.push_front(std::make_pair(var, right));
 
@@ -2352,16 +2445,22 @@ Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expr
     {
         evFunction->destroy();
         delete evFunction;
+        inter->destroy();
+        delete inter;
         return new Invalid();
     }
     double ya = _ya->getNumber();
 
-
-    auto _yc = dynamic_cast<Number*>(evFunction->eval(env));
+    auto inter2 = evFunction->eval(env);
+    auto _yc = dynamic_cast<Number*>(inter2);
     if (_yc == nullptr)
     {
         evFunction->destroy();
         delete evFunction;
+        inter->destroy();
+        delete inter;
+        inter2->destroy();
+        delete inter2;
         return new Invalid();
     }
     double yc_ = _yc->getNumber();
@@ -2402,10 +2501,10 @@ Expression* FindRootBisection::bisectionMethod(Number* left, Number* right, Expr
     }
     evFunction->destroy();
     delete evFunction;
-    _ya->destroy();
-    delete _ya;
-    _yc->destroy();
-    delete _yc;
+    inter->destroy();
+    delete inter;
+    inter2->destroy();
+    delete inter2;
     return new Number((a + c) / 2);
 }
 Expression* FindRootBisection::eval(Environment& env) const
@@ -2607,107 +2706,7 @@ std::string Assigment::toString() const noexcept
 {
     return leftExpression->toString() + " = " + rightExpression->toString();
 }
-// bool Assigment::containsName(Expression* expr, const std::string& varName, Environment& env) const noexcept
-// {
-//     if (expr == nullptr)
-//     {
-//         return false;
-//     }
 
-//     if (auto name = dynamic_cast<Name*>(expr))
-//     {
-//         return name->getName() == varName;
-//     }
-
-//     if (auto binary = dynamic_cast<BinaryExpression*>(expr))
-//     {
-//         return containsName(binary->getLeftExpression(), varName, env) || containsName(binary->getRightExpression(), varName, env);
-//     }
-
-//     if (auto unary = dynamic_cast<UnaryExpression*>(expr))
-//     {
-//         return containsName(unary->getExpression(), varName, env);
-//     }
-
-//     if (auto vec = dynamic_cast<Vector*>(expr))
-//     {
-//         for (auto e : vec->getVectorExpression())
-//         {
-//             if (containsName(e, varName, env))
-//             {
-//                 return true;
-//             }
-//         }
-//     }
-
-//     if (auto mat = dynamic_cast<Matrix*>(expr))
-//     {
-//         for (auto e : mat->getMatrixExpression())
-//         {
-//             if (containsName(e, varName, env))
-//             {
-//                 return true;
-//             }
-//         }
-//     }
-
-//     if (auto pair = dynamic_cast<Pair*>(expr))
-//     {
-//         return containsName(pair->getFirst(), varName, env) || containsName(pair->getSecond(), varName, env);
-//     }
-
-//     if (auto func = dynamic_cast<Function*>(expr))
-//     {
-//         return containsName(func->getExpression(), varName, env);
-//     }
-
-//     if (auto integral = dynamic_cast<Integral*>(expr))
-//     {
-//         auto exprs = integral->getExpressions();
-//         return containsName(std::get<0>(exprs), varName, env) ||
-//                containsName(std::get<1>(exprs), varName, env) ||
-//                containsName(std::get<2>(exprs), varName, env);
-//     }
-
-//     if (auto interp = dynamic_cast<Interpolate*>(expr))
-//     {
-//         auto exprs = interp->getExpressions();
-//         return containsName(std::get<0>(exprs), varName, env) ||
-//                containsName(std::get<1>(exprs), varName, env);
-//     }
-
-//     if (auto ode = dynamic_cast<ODEFirstOrderInitialValues*>(expr))
-//     {
-//         auto exprs = ode->getExpressions();
-//         return containsName(std::get<0>(exprs), varName, env) ||
-//                containsName(std::get<1>(exprs), varName, env) ||
-//                containsName(std::get<2>(exprs), varName, env) ||
-//                containsName(std::get<3>(exprs), varName, env);
-//     }
-
-//     if (auto root = dynamic_cast<FindRootBisection*>(expr))
-//     {
-//         auto exprs = root->getExpressions();
-//         return containsName(std::get<0>(exprs), varName, env) ||
-//                containsName(std::get<1>(exprs), varName, env) ||
-//                containsName(std::get<2>(exprs), varName, env) ||
-//                containsName(std::get<3>(exprs), varName, env);
-//     }
-
-//     if (auto list = dynamic_cast<ExpressionList*>(expr))
-//     {
-//         for (auto e : list->getVectorExpression())
-//         {
-//             if (containsName(e, varName, env))
-//             {
-//                 return true;
-//             }
-//         }
-//     }
-
-//     return false;
-// }
-//Expression List
 ExpressionList::ExpressionList() : expressions{}, sz{0} {}
 Expression* ExpressionList::eval(Environment& env) const
 {

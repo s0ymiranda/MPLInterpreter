@@ -11,11 +11,17 @@ vec3 = [3,1,-3];
 
 ma1 = {vec1,vec2,vec3};
 
-ma1inv = INVERSE(ma1);
-ma1tri = TRIDIAGONAL(ma1);
-ma1eigen = REALEIGENVALUES(ma1);
-ma1lu = MATRIXLU(ma1);
-ma1det = DETERMINANT(ma1);
+ma2 = {vec,vec2,vec3};
+ma1inv = INVERSE(ma2);
+
+ma1tri = TRIDIAGONAL(ma2);
+
+ma1eigen = REALEIGENVALUES(ma2);
+
+ma1lu = MATRIXLU(ma2);
+
+ma1det = DETERMINANT(ma2);
+
 
 ma1inv2 = INVERSE({[2,1,-3],[-1,3,2],[3,1,-3]});
 ma1tri2 = TRIDIAGONAL({[2,1,-3],[-1,3,2],[3,1,-3]});
