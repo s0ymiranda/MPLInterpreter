@@ -4,7 +4,6 @@ xo = 0;
 num1 = 3;
 num2 = 125;
 
-var = 'x';
 
 div = num1/num2;
 mul = div * var;
@@ -19,6 +18,6 @@ ode = ODEFIRST(sum,(to,xo),tFinal,var);
 
 display(ode);
 
-ode2 = ODEFIRST(sum,(to,xo),-10,var);
+ode2 = ODEFIRST(sum,(to,xo),LN(1/2),var);
 
 display(ode2);

@@ -18,9 +18,19 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 
 ## Installation and Usage Instructions
 
-1. **Prerequisites:**
+1. **Prerequisites (For Debian Distributions Users):**
    - Ensure you have Flex, Bison and Make installed on your system.
-   - Have a C and C++ compiler (such as GCC) available.
+   ```bash
+      sudo apt-get install flex bison make
+   ```
+   - Have g++ (C++ Compiler) installed.
+   ```bash
+      sudo apt-get install g++
+   ```
+   - To use the interactive interpreter, it is required to install the Readline library.
+   ```bash
+      sudo apt-get install libreadline-dev
+   ```
 
 2. **Clone the Repository:**
 
@@ -32,13 +42,21 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
    ```
 
 4. **Run the parser**
-    There is provide a make run, that uses all the files in the samples folder
+    There is provide a make run, that uses the interactive interpreter:
    ```bash
       make run
    ```
+   Also you can run all the files in the samples folder by using make mpl:
+   ```bash
+      make mpl
+   ```
+   Or use make mplv to run all the files with valgrind for memory study (required to have valgrind installed)
+   ```bash
+      make mplv
+   ```
    Or run the samples individually:
    ```bash
-      ./build/parser /samples/"name of the file"
+      ./build/mpl samples/"name of the file".mpl
    ```
 ## Note
    In the samples folder you can found examples usages for the lenguage. So you can make your own scripts of our lenguage and test then!. 
@@ -47,3 +65,6 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 ## Acknowledgements
 For more information about the development and specifications of the Mathematical Programming Language, you can refer to
 - [Mathematical Programming Lenguage Repository](https://github.com/gerardorosetti/programming_languages_project).
+
+For more information about the development and specifications of the Interpreter Mathematical Programming Language, you can read the development document
+- [Interpreter - MPL](https://docs.google.com/document/d/1WaoRi4Mnx79ktCwaNhNpfZGid2FKVRdQkL1OfwEX-Rc/edit?tab=t.0#heading=h.rwigb3anhsnq)

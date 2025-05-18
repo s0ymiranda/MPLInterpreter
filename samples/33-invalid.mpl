@@ -1,1 +1,1 @@
-test = INTEGRAL((2, 4), (2 + 3)^EULER, 'x', 'y');
+test = INTEGRAL((2, 4), (2 + 3)^EULER, x, y);
