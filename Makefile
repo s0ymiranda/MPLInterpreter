@@ -75,4 +75,17 @@ mpl: $(BUILD_DIR)/mpl
 		fi; \
 	done
 
-.PHONY: all clean run mpl
+mplv: $(BUILD_DIR)/mpl
+	@for i in $(shell seq $(START) $(END)); do \
+		SAMPLES_FILE="$(SAMPLES_DIR)/$$i-"*.mpl; \
+		if [ -f $$(echo $$SAMPLES_FILE | cut -d' ' -f1) ]; then \
+			for FILE in $$SAMPLES_FILE; do \
+				echo "\nExecuting File: $$FILE"; \
+				valgrind --leak-check=full ./$(BUILD_DIR)/mpl "$$FILE"; \
+			done; \
+		else \
+			echo "Archives not found $$i"; \
+		fi; \
+	done
+
+.PHONY: all clean run mpl mplv

@@ -42,34 +42,52 @@ INVALID: One or more elements in the vector could not be evaluated
 **Matrix Functions**
 INVALID: Empty matrix (0×0)
 INVALID: Inconsistent row sizes
+INVALID: Matrix arguments must be vectors or names
+INVALID: One or more elements in the matrix could not be evaluated
 
-INVALID: Matrix multiplication dimension mismatch
-INVALID: Matrix addition requires equal dimensions
 INVALID: Expected a Matrix
 IMPOSSIBLE: Matrix is singular (determinant=0)
-INVALID: Non-square matrix ([m×n] cannot be inverted/get eIGENVALUES/LU DECOMPOSED)
-INVALID: Matrix must be symmetric for tridiagonal form
-INVALID: Matrix contains non-numeric elements
-IMPOSSIBLE: Matrix is not positive definite
+INVALID: Expected a numeric value Matrix
+INVALID: Non-square matrix [m×n] cannot be inverted/get eIGENVALUES/LU DECOMPOSED /Tridiagonal
+INVALID: Cannot compute Real Eigenvalues
 
 **Integral**
-INVALID: Integral bounds must be numeric
-INVALID: Integration variable must be identifier
-IMPOSSIBLE: Integral diverges in interval [a,b]
+INVALID: Expected variable 'varName' in function funcName
+INVALID: Expected that elements in the function evaluate to numeric values
+INVALID: Expected Pair, got [typeA]
+INVALID: Expected Pair, got different type
+INVALID: Expected numeric values in the interval
+INVALID: Integration variable must be a Name
 
 **ODE Solving**
-INVALID: ODE function must use the specified variable [variable_name]
-INVALID: Initial condition must be pair
-INCALID: ODE function not contains the variable
-INVALID: time interval must be ordered as [t_init, t_final] where t_final > t_init
+INVALID:  Expected variable 'varName' in function funcName
+INVALID: Expected that elements in the function evaluate to numeric values
+INVALID: Invalid arguments received
+INVALID: Time interval must be ordered as [t_init, t_final] where t_final > t_init
+INVALID: ODE variable must be a Name
 
 **Interpolation**
-IMPOSSIBLE: Extrapolation beyond data range
+INVALID: Expected a Vector
+INVALID: Expected a Number for interpolation
+INVALID: Interpolation requires vector of (x, y) pairs
+INVALID: Expected numeric values in the Pair
 
-**Recursion**
+**Name/Assigment**
 INVALID: Recursive assignment detected for variable '[name]'
+INVALID: Expected a Name for assignment
 
-**Pair**\
+**Pair**
 INVALID: Expected Pair, got [Type]
 INVALID: Expected Pair, got different type
 INVALID: Pair elements must be evaluable expressions
+
+**FindRootBisection**
+INVALID: Invalid arguments received
+INVALID:  Expected variable 'varName' in function funcName
+INVALID: Expected that elements in the function evaluate to numeric values
+INVALID: Expected Pair, got [typeA]
+INVALID: Expected Pair, got different type
+INVALID: Expected numeric values in the interval
+INVALID: Interval must be ordered as [init, final] where final > init
+INVALID: Variable must be a Name
+INVALID: Iteration limit must be a Number

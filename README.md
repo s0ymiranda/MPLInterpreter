@@ -16,10 +16,19 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
 
 ## Installation and Usage Instructions
 
-1. **Prerequisites:**
+1. **Prerequisites (For Debian Distributions Users):**
    - Ensure you have Flex, Bison and Make installed on your system.
-   - Have a C and C++ compiler (such as GCC) available.
-   - To use the interactive interpreter, it is required to install the Readline library. You can do it in Ubuntu just by executing: sudo apt-get install libreadline-dev.
+   ```bash
+      sudo apt-get install flex bison make
+   ```
+   - Have g++ (C++ Compiler) installed.
+   ```bash
+      sudo apt-get install g++
+   ```
+   - To use the interactive interpreter, it is required to install the Readline library.
+   ```bash
+      sudo apt-get install libreadline-dev
+   ```
 
 2. **Clone the Repository:**
 
@@ -38,6 +47,10 @@ The Mathematical Programming Language was designed to solve fundamental mathemat
    Also you can run all the files in the samples folder by using make mpl:
    ```bash
       make mpl
+   ```
+   Or use make mplv to run all the files with valgrind for memory study (required to have valgrind installed)
+   ```bash
+      make mplv
    ```
    Or run the samples individually:
    ```bash
