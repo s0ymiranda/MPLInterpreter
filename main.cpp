@@ -207,12 +207,6 @@ int main() {
         else
         {
             std::cerr << get_error_prompt("Parse error") << "Invalid syntax\n\n";
-            if (parser_result)
-            {
-                parser_result->destroy();
-                delete parser_result;
-                parser_result = nullptr;
-            }
 
             for (Expression* expr : pointers)
             {
