@@ -11,17 +11,12 @@ END = 48
 
 READLINE_FLAGS = -lreadline
 
-INTERACTIVE_OBJ = $(BUILD_DIR)/interactive.o $(BUILD_DIR)/utils.o $(BUILD_DIR)/Expression.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/scanner.o
-
 MPL_OBJ = $(BUILD_DIR)/mpl.o $(BUILD_DIR)/utils.o $(BUILD_DIR)/Expression.o $(BUILD_DIR)/parser.o $(BUILD_DIR)/scanner.o
 
-all: $(BUILD_DIR)/interpreter $(BUILD_DIR)/mpl
-
-$(BUILD_DIR)/interpreter: $(INTERACTIVE_OBJ)
-	$(CXX) $^ -o $@ $(READLINE_FLAGS)
+all: $(BUILD_DIR)/mpl
 
 $(BUILD_DIR)/mpl: $(MPL_OBJ)
-	$(CXX) $^ -o $@
+	$(CXX) $^ -o $@ $(READLINE_FLAGS)
 
 $(BUILD_DIR)/parser.o: $(BUILD_DIR)/parser.c $(BUILD_DIR)/token.h
 	$(CXX) -I$(INCLUDE_DIR) -I$(BUILD_DIR) -c $< -o $@
@@ -35,10 +30,7 @@ $(BUILD_DIR)/scanner.o: $(BUILD_DIR)/scanner.c $(BUILD_DIR)/token.h
 $(BUILD_DIR)/scanner.c: scanner.flex $(BUILD_DIR)/token.h | $(BUILD_DIR)
 	$(FLEX) -o $@ $<
 
-$(BUILD_DIR)/interactive.o: main.cpp $(BUILD_DIR)/token.h
-	$(CXX) -I$(INCLUDE_DIR) -I$(BUILD_DIR) -c $< -o $@
-
-$(BUILD_DIR)/mpl.o: mpl.cpp $(BUILD_DIR)/token.h
+$(BUILD_DIR)/mpl.o: main.cpp $(BUILD_DIR)/token.h
 	$(CXX) -I$(INCLUDE_DIR) -I$(BUILD_DIR) -c $< -o $@
 
 $(BUILD_DIR)/utils.o: $(SRC_DIR)/utils.cpp $(INCLUDE_DIR)/utils.hpp
@@ -54,14 +46,14 @@ $(BUILD_DIR)/token.h: parser.bison | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-$(BUILD_DIR)/interactive.o $(BUILD_DIR)/mpl.o: | $(BUILD_DIR)
+$(BUILD_DIR)/mpl.o: | $(BUILD_DIR)
 
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_DIR)
 
-run: $(BUILD_DIR)/interpreter
-	./$(BUILD_DIR)/interpreter
+run: $(BUILD_DIR)/mpl
+	./$(BUILD_DIR)/mpl
 
 mpl: $(BUILD_DIR)/mpl
 	@for i in $(shell seq $(START) $(END)); do \

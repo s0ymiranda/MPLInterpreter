@@ -128,7 +128,69 @@ std::string_view trim(std::string_view str)
     return str.substr(start, end - start);
 }
 
-int main() {
+void usage(char* argv[])
+{
+    std::cout << "Usage 1: " << argv[0] << " input_file" << std::endl;
+    std::cout << "Usage 2: " << argv[0] << std::endl;
+    exit(1);
+}
+
+int main(int argc, char* argv[])
+{
+
+    if (argc == 2)
+    {
+        yyin = fopen(argv[1], "r");
+
+        if (!yyin)
+        {
+            std::cout << "Could not open " << argv[1] << std::endl;
+            exit(1);
+        }
+
+        int result = yyparse();
+
+        if (result == 0)
+        {
+            auto env = Environment();
+            auto exs = dynamic_cast<ExpressionList*>(parser_result);
+            std::unique_ptr<Expression> res(exs->eval(env));
+            std::cout << res->toString();
+            res->destroy();
+            exs->destroy();
+            for (auto& t : env)
+            {
+                if (t.second != nullptr)
+                {
+                    t.second->destroy();
+                    delete t.second;
+                    t.second = nullptr;
+                }
+            }
+        }
+        else
+        {
+            std::cout << "Parse failed!" << std::endl;
+
+            for (Expression* expr : pointers)
+            {
+                if (expr != nullptr)
+                {
+                    delete expr;
+                    expr = nullptr;
+                }
+            }
+
+            pointers.clear();
+        }
+
+        return EXIT_SUCCESS;
+    }
+    else if(argc > 2)
+    {
+        usage(argv);
+    }
+
     std::cout << "Interactive Interpreter for Mathematical Programming Language\n"
               << "Type 'exit' to quit or press Ctrl+D\n\n";
 

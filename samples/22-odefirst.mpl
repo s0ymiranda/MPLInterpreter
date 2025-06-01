@@ -17,7 +17,3 @@ tFinal = 30;
 ode = ODEFIRST(sum,(to,xo),tFinal,var);
 
 display(ode);
-
-ode2 = ODEFIRST(sum,(to,xo),LN(1/2),var);
-
-display(ode2);
